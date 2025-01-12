@@ -126,3 +126,9 @@ class Player(HasHands):
 class Dealer(HasHands):
     def __init__(self):
         super().__init__()
+
+    def upcard(self):
+        return self.hands[0].cards[1]
+
+    def hole_card(self):
+        return self.hands[0].cards[0]

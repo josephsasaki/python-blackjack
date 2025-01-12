@@ -456,17 +456,17 @@ def test_three_to_two():
 
 
 def test_make_hand_payment__bust_bust():
-    """make_hand_payment(): dealer is bust, player is bust -> push"""
+    """make_hand_payment(): dealer is bust, player is bust -> lost"""
     # Setup
     player = Player("test_name", 90.)
     hand = Hand([("10", "H"), ("10", "H"), ("2", "H")], bet=10)
     hand.is_active = False
     player.give_hand(hand)
-    dealer_hand = Hand([("Q", "H"), ("K", "H"), ("3", "H")])
+    dealer_hand = Hand([("Q", "H"), ("K", "H")])
     # Function call
     blackjack.make_hand_payment(player, hand, dealer_hand)
     # Assertions
-    assert player.purse == 100.
+    assert player.purse == 90.
 
 
 def test_make_hand_payment__bust_score():
@@ -842,6 +842,81 @@ def test_player_turn_split_double_down_stick(monkeypatch):
     assert player.hands[1].cards == [("7", "D"), ("2", "D")]
     assert len(deck) == 1
     assert player.purse == 70.
+
+
+# complete_dealer_turn()
+
+
+def test_complete_dealer_turn_all_busts():
+    """complete_dealer_turn(): returns False if all hands are bust"""
+    # Setup
+    dealer = Dealer()
+    dealer.give_hand(Hand([("10", "H"), ("7", "H")]))
+    player1 = Player("test_name", 80.)
+    hand1 = Hand([("10", "H"), ("7", "H"), ("8", "H")], bet=10.)
+    hand2 = Hand([("7", "H"), ("7", "H"), ("10", "H")], bet=10.)
+    player1.give_hand(hand1)
+    player1.give_hand(hand2)
+    player2 = Player("test_name", 80.)
+    hand3 = Hand([("10", "H"), ("7", "H"), ("8", "H")], bet=10.)
+    player2.give_hand(hand3)
+    players = [player1, player2]
+    # Assertion
+    assert blackjack.complete_dealer_turn(players, dealer) == False
+
+
+def test_complete_dealer_turn_not_all_busts():
+    """complete_dealer_turn(): returns True if not all hands are bust"""
+    # Setup
+    dealer = Dealer()
+    dealer.give_hand(Hand([("10", "H"), ("7", "H")]))
+    player1 = Player("test_name", 80.)
+    hand1 = Hand([("10", "H"), ("7", "H"), ("8", "H")], bet=10.)
+    hand2 = Hand([("7", "H"), ("7", "H")], bet=10.)
+    player1.give_hand(hand1)
+    player1.give_hand(hand2)
+    player2 = Player("test_name", 80.)
+    hand3 = Hand([("10", "H"), ("7", "H"), ("8", "H")], bet=10.)
+    player2.give_hand(hand3)
+    players = [player1, player2]
+    # Assertion
+    assert blackjack.complete_dealer_turn(players, dealer) == True
+
+
+def test_complete_dealer_turn_dealer_no_blackjack():
+    """complete_dealer_turn(): if dealer has no chance of blackjack, and all players have blackjacks"""
+    # Setup
+    dealer = Dealer()
+    dealer.give_hand(Hand([("10", "H"), ("7", "H")]))
+    player1 = Player("test_name", 80.)
+    hand1 = Hand([("10", "H"), ("A", "H")], bet=10.)
+    hand2 = Hand([("A", "H"), ("J", "H")], bet=10.)
+    player1.give_hand(hand1)
+    player1.give_hand(hand2)
+    player2 = Player("test_name", 80.)
+    hand3 = Hand([("K", "H"), ("A", "H")], bet=10.)
+    player2.give_hand(hand3)
+    players = [player1, player2]
+    # Assertion
+    assert blackjack.complete_dealer_turn(players, dealer) == False
+
+
+def test_complete_dealer_turn_dealer_blackjack():
+    """complete_dealer_turn(): returns False if all hands are blackjacks"""
+    # Setup
+    dealer = Dealer()
+    dealer.give_hand(Hand([("10", "H"), ("A", "H")]))
+    player1 = Player("test_name", 80.)
+    hand1 = Hand([("10", "H"), ("A", "H")], bet=10.)
+    hand2 = Hand([("A", "H"), ("J", "H")], bet=10.)
+    player1.give_hand(hand1)
+    player1.give_hand(hand2)
+    player2 = Player("test_name", 80.)
+    hand3 = Hand([("K", "H"), ("5", "H")], bet=10.)
+    player2.give_hand(hand3)
+    players = [player1, player2]
+    # Assertion
+    assert blackjack.complete_dealer_turn(players) == True
 
 
 # dealer_turn()

@@ -71,11 +71,10 @@ HAND_GRAPHICS = [
 ]
 TOP_RANK_REPLACE = [(5, 1), (4, 4), (3, 7), (2, 10), (1, 13)]
 TOP_SUIT_REPLACE = [(6, 1), (5, 4), (4, 7), (3, 10), (2, 13)]
-
 BOTTOM_RANK_REPLACE = [(8, 6), (7, 9), (6, 12), (5, 15), (4, 18)]
 BOTTOM_SUIT_REPLACE = [(7, 7), (6, 10), (5, 13), (4, 16), (3, 19)]
-
 SCORE_REPLACE = (0, 1)
+HAND_GAP = "  │  "
 
 
 def make_hand_graphic(hand: Hand) -> list[str]:
@@ -127,7 +126,7 @@ def display_all_hands_graphic(hands: list[Hand]) -> list[str]:
         for hand in hands:
             hand_graphic = make_hand_graphic(hand)
             lines.append(hand_graphic[row_index])
-        all_hands_graphic.append("  │  ".join(lines))
+        all_hands_graphic.append(HAND_GAP.join(lines))
     return all_hands_graphic
 
 

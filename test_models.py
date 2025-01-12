@@ -1,6 +1,6 @@
 # pylint: skip-file
 
-from models import Hand, HasHands, Player
+from models import Hand, HasHands, Player, Dealer
 import pytest
 from support.testing_util import player_chooses
 
@@ -234,3 +234,19 @@ def test_hashands_get_next_hand_none():
     has_hands.give_hand(hand2)
     has_hands.give_hand(hand3)
     assert has_hands.get_next_hand() == None
+
+
+def test_dealer_upcard():
+    """Dealer.upcard(): returns the second card in hand, seen"""
+    dealer = Dealer()
+    hand = Hand([("A", "H"), ("K", "D")])
+    dealer.give_hand(hand)
+    assert dealer.upcard() == ("K", "D")
+
+
+def test_dealer_hole_card():
+    """Dealer.hole_card(): returns the first card in hand, hidden"""
+    dealer = Dealer()
+    hand = Hand([("A", "H"), ("K", "D")])
+    dealer.give_hand(hand)
+    assert dealer.hole_card() == ("A", "H")

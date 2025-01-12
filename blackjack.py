@@ -322,6 +322,13 @@ def deal_initial_hands(deck: list[(str)], players: list[Player], dealer: Dealer,
             person.hands[0].add_card(drawn_card)
 
 
+# INSURANCE FUNCTIONS
+
+
+def insurance():
+    pass
+
+
 # ROUND PAYMENTS AND HAND OUTCOME FUNCTIONS
 
 
@@ -362,7 +369,7 @@ def make_hand_payment(player: Player, player_hand: Hand, dealer_hand: Hand):
     """
     # Outcomes (index 0=bust, 1=by-score, 2=blackjack)
     outcomes = [
-        [push, lost, lost],
+        [lost, lost, lost],
         [one_to_one, None, lost],
         [three_to_two, three_to_two, push],
     ]
@@ -454,6 +461,14 @@ def player_turn(player: Player, deck: list[(str)]):
             print_player_hand(hand)
 
 
+def complete_dealer_turn(players: list[Player], dealer) -> bool:
+    """
+    Check whether the dealer's turn should be completed. Dealer's turn not completed if:
+    1) All hands are bust
+    2) All hands are blackjacks and 
+    """
+
+
 def dealer_turn(dealer: Dealer, deck: list[(str)]):
     """
     Complete a round for the dealer.
@@ -500,7 +515,14 @@ def round(number_of_decks: int, players: list[Player], dealer: Dealer, seed: int
         print_player_turn_title(player)
         player_turn(player, shuffled_deck)
 
-    # Complete the dealer turn
+    # Complete the dealer turn, only is allowed
+    complete_dealer_turn = True
+    # Dealer doesn't have their turn if all players are bust
+    busts = []
+    for player in players:
+        pass
+        # or if all players have blackjack and dealer definitely doesn't.
+
     dealer_turn(dealer, shuffled_deck)
 
     # Make payments
