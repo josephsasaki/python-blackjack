@@ -101,6 +101,7 @@ class Hand():
 class HasHands():
     def __init__(self):
         self.hands = []
+        self.split_count = 0
 
     def give_hand(self, hand: Hand):
         self.hands.append(hand)
@@ -112,8 +113,9 @@ class HasHands():
         # If this point reached, all hands are resolved
         return None
 
-    def reset_hand(self) -> None:
+    def reset(self) -> None:
         self.hands = []
+        self.split_count = 0
 
 
 class Player(HasHands):

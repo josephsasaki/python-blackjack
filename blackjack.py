@@ -11,6 +11,7 @@ RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 MAX_DECK_PACKS = 5
 MAX_PLAYERS = 5
 MINIMUM_BET = 5.0
+MAX_SPLITS = 3
 INVALID_RESPONSE = "Invalid response. Please try again."
 
 
@@ -434,11 +435,11 @@ def player_turn(player: Player, deck: list[(str)]):
             continue
         # Get the action choices
         action_choices = ["hit", "stick"]
-        if hand.can_split(player):
+        if hand.can_split(player) and player.split_count < MAX_SPLITS:
             action_choices.append("split")
         if hand.can_double_down(player):
             action_choices.append("double-down")
-        # Get player action
+        # Get player action and commit action
         action = ask_player_action(action_choices)
         if action == "hit":
             hand.hit(deck)
@@ -446,6 +447,7 @@ def player_turn(player: Player, deck: list[(str)]):
             hand.stick()
         elif action == "split":
             hand.split(deck, player)
+            player.split_count += 1
         elif action == "double-down":
             hand.double_down(deck, player)
             double_downed = True
@@ -465,8 +467,21 @@ def complete_dealer_turn(players: list[Player], dealer) -> bool:
     """
     Check whether the dealer's turn should be completed. Dealer's turn not completed if:
     1) All hands are bust
-    2) All hands are blackjacks and 
+    2) All hands are blackjacks and dealer has no chance of blackjack
     """
+    busts = []
+    blackjacks = []
+    for player in players:
+        for hand in player.hands:
+            busts.append(hand.is_bust())
+            blackjacks.append(hand.is_blackjack())
+    # Check if all busts
+    if all(busts):
+        return False
+    # Check if all blackjacks
+    if all(blackjacks) and dealer.upcard()[0] not in {"A", "10", "J", "Q", "K"}:
+        return False
+    return True
 
 
 def dealer_turn(dealer: Dealer, deck: list[(str)]):
@@ -489,6 +504,15 @@ def dealer_turn(dealer: Dealer, deck: list[(str)]):
 
 
 # MAIN GAME LOOP AND ROUND FUNCTIONS
+
+
+def reset(players: list[Player], dealer: Dealer):
+    """
+    Resets the players' and dealer's hands, and resets split counter
+    """
+    # Reset the players hands
+    for has_hand in players + [dealer]:
+        has_hand.reset()
 
 
 def round(number_of_decks: int, players: list[Player], dealer: Dealer, seed: int):
@@ -516,22 +540,15 @@ def round(number_of_decks: int, players: list[Player], dealer: Dealer, seed: int
         player_turn(player, shuffled_deck)
 
     # Complete the dealer turn, only is allowed
-    complete_dealer_turn = True
-    # Dealer doesn't have their turn if all players are bust
-    busts = []
-    for player in players:
-        pass
-        # or if all players have blackjack and dealer definitely doesn't.
-
-    dealer_turn(dealer, shuffled_deck)
+    if complete_dealer_turn(players, dealer):
+        dealer_turn(dealer, shuffled_deck)
 
     # Make payments
     print_make_payments_title()
     make_payments(players, dealer)
 
-    # Reset the players hands
-    for player in players + [dealer]:
-        player.reset_hand()
+    # Reset
+    reset(players, dealer)
 
 
 def play(seed):

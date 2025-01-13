@@ -844,6 +844,27 @@ def test_player_turn_split_double_down_stick(monkeypatch):
     assert player.purse == 70.
 
 
+def test_player_turn_reaches_max_splits(monkeypatch):
+    """player_turn(): player splits, then double-downs on one hand and sticks the other."""
+    player_chooses(["split", "double-down", "stick"], monkeypatch)
+    # Setup
+    deck = [("3", "H"), ("4", "H"), ("2", "D"), ("5", "H")]
+    player = Player("test_name", 90.)
+    hand = Hand([("7", "H"), ("7", "D")], bet=10.)
+    player.give_hand(hand)
+    # Function call
+    blackjack.player_turn(player, deck)
+    # Assertions
+    assert not player.hands[0].is_active
+    assert not player.hands[1].is_active
+    assert player.hands[0].bet == 20.
+    assert player.hands[1].bet == 10.
+    assert player.hands[0].cards == [("7", "H"), ("5", "H"), ("4", "H")]
+    assert player.hands[1].cards == [("7", "D"), ("2", "D")]
+    assert len(deck) == 1
+    assert player.purse == 70.
+
+
 # complete_dealer_turn()
 
 
@@ -887,7 +908,7 @@ def test_complete_dealer_turn_dealer_no_blackjack():
     """complete_dealer_turn(): if dealer has no chance of blackjack, and all players have blackjacks"""
     # Setup
     dealer = Dealer()
-    dealer.give_hand(Hand([("10", "H"), ("7", "H")]))
+    dealer.give_hand(Hand([("10", "H"), ("6", "H")]))
     player1 = Player("test_name", 80.)
     hand1 = Hand([("10", "H"), ("A", "H")], bet=10.)
     hand2 = Hand([("A", "H"), ("J", "H")], bet=10.)
@@ -902,7 +923,7 @@ def test_complete_dealer_turn_dealer_no_blackjack():
 
 
 def test_complete_dealer_turn_dealer_blackjack():
-    """complete_dealer_turn(): returns False if all hands are blackjacks"""
+    """complete_dealer_turn(): returns True if all hands are blackjacks, but dealer might have a blackjack"""
     # Setup
     dealer = Dealer()
     dealer.give_hand(Hand([("10", "H"), ("A", "H")]))
@@ -912,11 +933,11 @@ def test_complete_dealer_turn_dealer_blackjack():
     player1.give_hand(hand1)
     player1.give_hand(hand2)
     player2 = Player("test_name", 80.)
-    hand3 = Hand([("K", "H"), ("5", "H")], bet=10.)
+    hand3 = Hand([("K", "H"), ("A", "H")], bet=10.)
     player2.give_hand(hand3)
     players = [player1, player2]
     # Assertion
-    assert blackjack.complete_dealer_turn(players) == True
+    assert blackjack.complete_dealer_turn(players, dealer) == True
 
 
 # dealer_turn()
@@ -968,3 +989,30 @@ def test_dealer_turn_soft_17_stick():
 
 
 # ---------- MAIN GAME LOOP AND ROUND FUNCTIONS ----------
+
+
+# reset()
+
+
+def test_reset():
+    """reset(): check hands lists are empty and split counter reset"""
+    # Setup
+    player1 = Player("test_name1", 100.)
+    hand1 = Hand([("A", "H"), ("K", "D")])
+    player1.give_hand(hand1)
+    player1.split_count = 2
+    player2 = Player("test_name2", 100.)
+    hand2 = Hand([("10", "H"), ("10", "D")])
+    player2.give_hand(hand2)
+    player1.split_count = 3
+    dealer = Dealer()
+    hand3 = Hand([("10", "H"), ("10", "D")])
+    dealer.give_hand(hand3)
+    # Function call
+    blackjack.reset([player1, player2], dealer)
+    # Assertions
+    assert player1.hands == []
+    assert player2.hands == []
+    assert player1.split_count == 0
+    assert player2.split_count == 0
+    assert dealer.hands == []
