@@ -1,5 +1,5 @@
 
-from blackjack import Player, Asker, Card
+from blackjack import Player, Asker, Card, Deck
 from support.testing_util import player_chooses
 
 import pytest
@@ -46,6 +46,49 @@ def test_card_get_suit():
     """get_suit(): suit returned"""
     card = Card("A", "H")
     assert card.get_suit() == "H"
+
+
+# ----------- DECK -----------
+
+
+# __init__()
+
+
+def test_deck_size():
+    """__init__(): check the correct number of cards are present."""
+    assert len(Deck(1)._Deck__cards) == 52
+    assert len(Deck(2)._Deck__cards) == 104
+    assert len(Deck(3)._Deck__cards) == 156
+    assert len(Deck(4)._Deck__cards) == 208
+
+
+# shuffle()
+
+
+def test_deck_shuffle():
+    """shuffle(): check the deck is shuffled"""
+    deck = Deck(1)
+    card1 = deck._Deck__cards[0]
+    deck.shuffle(deck, 123456)
+    card2 = deck._Deck__cards[0]
+    assert card1 is not card2
+
+
+# take_card_from_deck()
+
+
+def test_deck_pick():
+    """take_card_from_deck(): test that a card is returned and deck removes card."""
+    deck = [("3", "H"), ("4", "D"), ("A", "H"), ("Q", "C"), ("7", "S")]
+    card = old_blackjack.take_card_from_deck(deck)
+    assert card == ("7", "S")
+    assert len(deck) == 4
+
+
+def test_take_card_from_deck_empty_deck():
+    """take_card_from_deck(): Error raised if deck is empty"""
+    with pytest.raises(IndexError):
+        old_blackjack.take_card_from_deck([])
 
 
 # ----------- ASKER -----------

@@ -1,4 +1,7 @@
 
+from random import Random
+
+
 class Card():
 
     SUITS = ["S", "D", "H", "C"]
@@ -18,6 +21,48 @@ class Card():
 
     def get_suit(self) -> str:
         return self.__suit
+
+
+class Deck():
+
+    MAX_DECK_PACKS = 5
+
+    def __init__(self, cards: list[Card] = None, number_of_decks: int = None):
+        if cards is None and number_of_decks is not None:
+            self.__generate_deck(number_of_decks)
+        elif cards is None and number_of_decks is None:
+            self.__pass_cards(cards)
+        else:
+            raise ValueError("Missing arguments.")
+
+    def __generate_deck(self, number_of_decks: int) -> None:
+        if not isinstance(number_of_decks, int):
+            raise ValueError("Invalid number of decks passed.")
+        if number_of_decks < 0 or number_of_decks > Deck.MAX_DECK_PACKS:
+            raise ValueError("Invalid number of decks passed.")
+        self.__cards = []
+        for _ in range(number_of_decks):
+            for suit in Card.SUITS:
+                for rank in Card.RANKS:
+                    self.__cards.append(Card(rank, suit))
+
+    def __pass_cards(self, cards: list[Card]):
+        if not all([isinstance(card, Card) for card in cards]):
+            raise ValueError("All passed cards must be Card objects.")
+        if len(cards) == 0:
+            raise ValueError("Deck cannot be empty.")
+        self.__cards = cards
+
+    def pick(self) -> Card:
+        if len(self.__cards) == 0:
+            raise ValueError("Taking card from empty deck.")
+        return self.__cards.pop()
+
+    def shuffle(self, seed: int) -> None:
+        """Randomizes the deck of cards"""
+        Random(seed).shuffle(self.cards)
+
+    def
 
 
 class Hand():
@@ -161,7 +206,6 @@ class Dealer(HasHands):
 
 class Asker():
 
-    MAX_DECK_PACKS = 5
     INVALID_RESPONSE = "Invalid response. Please try again."
     MAX_PLAYERS = 5
     MINIMUM_BET = 500
