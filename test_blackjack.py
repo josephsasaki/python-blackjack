@@ -54,12 +54,26 @@ def test_card_get_suit():
 # __init__()
 
 
-def test_deck_size():
-    """__init__(): check the correct number of cards are present."""
-    assert len(Deck(1)._Deck__cards) == 52
-    assert len(Deck(2)._Deck__cards) == 104
-    assert len(Deck(3)._Deck__cards) == 156
-    assert len(Deck(4)._Deck__cards) == 208
+def test_deck_generate_cards():
+    """__init__(): deck correctly generates cards"""
+    assert len(Deck(number_of_decks=1)._Deck__cards) == 52
+    assert len(Deck(number_of_decks=2)._Deck__cards) == 104
+    assert len(Deck(number_of_decks=3)._Deck__cards) == 156
+    assert len(Deck(number_of_decks=4)._Deck__cards) == 208
+
+
+def test_deck_pass_cards():
+    """__init__(): passed cards"""
+    cards = [Card("4", "D"), Card("A", "H"),
+             Card("Q", "C"), Card("7", "S")]
+    deck = Deck(cards=cards)
+    assert deck._Deck__cards == cards
+
+
+def test_deck_both_none():
+    """__init__(): error raised when nothing passed"""
+    with pytest.raises(ValueError):
+        Deck()
 
 
 # shuffle()
@@ -67,9 +81,9 @@ def test_deck_size():
 
 def test_deck_shuffle():
     """shuffle(): check the deck is shuffled"""
-    deck = Deck(1)
+    deck = Deck(number_of_decks=1)
     card1 = deck._Deck__cards[0]
-    deck.shuffle(deck, 123456)
+    deck.shuffle(123456)
     card2 = deck._Deck__cards[0]
     assert card1 is not card2
 
@@ -79,16 +93,22 @@ def test_deck_shuffle():
 
 def test_deck_pick():
     """take_card_from_deck(): test that a card is returned and deck removes card."""
-    deck = [("3", "H"), ("4", "D"), ("A", "H"), ("Q", "C"), ("7", "S")]
-    card = old_blackjack.take_card_from_deck(deck)
-    assert card == ("7", "S")
-    assert len(deck) == 4
+    top_card = Card("3", "H")
+    cards = [Card("4", "D"),
+             Card("A", "H"), Card("Q", "C"),
+             Card("7", "S"), top_card]
+    deck = Deck(cards=cards)
+    card = deck.pick()
+    assert card == top_card
+    assert len(deck._Deck__cards) == 4
 
 
 def test_take_card_from_deck_empty_deck():
     """take_card_from_deck(): Error raised if deck is empty"""
-    with pytest.raises(IndexError):
-        old_blackjack.take_card_from_deck([])
+    deck = Deck(number_of_decks=1)
+    deck._Deck__cards = []
+    with pytest.raises(ValueError):
+        deck.pick()
 
 
 # ----------- ASKER -----------
@@ -105,14 +125,14 @@ def test_ask_number_of_decks_valid(monkeypatch):
 
 def test_ask_number_of_decks_too_many(monkeypatch):
     """ask_number_of_decks(): a number above the max deck asks the user again."""
-    player_chooses([str(Asker.MAX_DECK_PACKS + 1), "2"], monkeypatch)
+    player_chooses([str(Deck.MAX_DECK_PACKS + 1), "2"], monkeypatch)
     assert Asker.ask_number_of_decks() == 2
 
 
 def test_ask_number_of_decks_max(monkeypatch):
     """ask_number_of_decks(): a number equal to the max is valid."""
-    player_chooses([str(Asker.MAX_DECK_PACKS)], monkeypatch)
-    assert Asker.ask_number_of_decks() == Asker.MAX_DECK_PACKS
+    player_chooses([str(Deck.MAX_DECK_PACKS)], monkeypatch)
+    assert Asker.ask_number_of_decks() == Deck.MAX_DECK_PACKS
 
 
 def test_ask_number_of_decks_too_few(monkeypatch):
