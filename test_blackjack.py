@@ -844,26 +844,37 @@ def test_player_turn_split_double_down_stick(monkeypatch):
     assert player.purse == 70.
 
 
-def test_player_turn_reaches_max_splits(monkeypatch):
-    """player_turn(): player splits, then double-downs on one hand and sticks the other."""
-    player_chooses(["split", "double-down", "stick"], monkeypatch)
+def test_player_turn_up_to_max_split(monkeypatch):
+    """player_turn(): player reaches the maximum number of splits."""
+    player_chooses(["split", "split", "stick", "split",
+                   "stick", "stick", "stick"], monkeypatch)
     # Setup
-    deck = [("3", "H"), ("4", "H"), ("2", "D"), ("5", "H")]
+    deck = [("K", "S"), ("A", "D"), ("5", "H"),
+            ("8", "D"), ("7", "S"), ("7", "D")]
     player = Player("test_name", 90.)
-    hand = Hand([("7", "H"), ("7", "D")], bet=10.)
+    hand = Hand([("7", "H"), ("7", "H")], bet=10.)
     player.give_hand(hand)
     # Function call
     blackjack.player_turn(player, deck)
     # Assertions
     assert not player.hands[0].is_active
     assert not player.hands[1].is_active
-    assert player.hands[0].bet == 20.
+    assert not player.hands[2].is_active
+    assert not player.hands[3].is_active
+    assert player.hands[0].bet == 10.
     assert player.hands[1].bet == 10.
-    assert player.hands[0].cards == [("7", "H"), ("5", "H"), ("4", "H")]
-    assert player.hands[1].cards == [("7", "D"), ("2", "D")]
-    assert len(deck) == 1
-    assert player.purse == 70.
+    assert player.hands[2].bet == 10.
+    assert player.hands[3].bet == 10.
+    assert player.hands[0].cards == [("7", "H"), ("8", "D")]
+    assert player.hands[1].cards == [("7", "H"), ("A", "D")]
+    assert player.hands[2].cards == [("7", "D"), ("5", "H")]
+    assert player.hands[3].cards == [("7", "S"), ("K", "S")]
+    assert len(deck) == 0
+    assert player.purse == 60.
 
+
+def test_player_turn_over_max_split(monkeypatch):
+    pass
 
 # complete_dealer_turn()
 

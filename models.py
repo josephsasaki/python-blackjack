@@ -61,6 +61,8 @@ class Hand():
         self.add_card(drawn_card)
         if self.get_score() >= 21:
             self.is_active = False
+        if len(self.cards) == 5:
+            self.is_active = False
 
     def stick(self):
         self.is_active = False

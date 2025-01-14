@@ -2,6 +2,18 @@ import rich
 from models import Hand
 
 
+TITLE_GRAPHIC = [
+    "╭──╮╭╮╭╮.╭────╮.╭╮.....╭────╮.╭────╮.╭╮",
+    "│╭╮││╰╯│.│╭──╮│.││.....│╭──╮│.│....│.││",
+    "│╰╯│╰─╮│.│╰──╯│.││.....││..││.│╭───╯.││",
+    "│╭─╯╭╮││.│╭───╯.││.....│╰──╯│.││.....│╰─",
+    "││..│╰╯│.│╰───╮.││.....│╭──╮│.││.....│╭─",
+    "╰╯..╰──╯.│╭──╮│.│╰───╮.││..││.│╰───╮.││",
+    ".........│╰──╯│.│....│.││..││.│....│.││",
+    ".........╰────╯.╰────╯.╰╯..╰╯.╰────╯.╰╯",
+]
+
+
 HAND_GRAPHIC_5 = [
     "[  ]        ╭───────╮",
     "         ╭──┤ZZ     │",
@@ -116,7 +128,7 @@ def make_hand_graphic(hand: Hand) -> list[str]:
     return hand_graphic
 
 
-def display_all_hands_graphic(hands: list[Hand]) -> list[str]:
+def make_all_hands_graphic(hands: list[Hand]) -> list[str]:
     """
     Concatenates all the individual hand graphics together.
     """
@@ -137,5 +149,5 @@ if __name__ == "__main__":
         Hand([("10", "H"), ("10", "D"), ("10", "C")]),
         Hand([("10", "H")]),
     ]
-    g = display_all_hands_graphic(hands)
-    print("\n".join(g))
+    g = make_all_hands_graphic(hands)
+    print("\n".join(TITLE_GRAPHIC).replace('.', ' '))
