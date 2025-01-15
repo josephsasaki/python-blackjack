@@ -23,6 +23,9 @@ class Card():
     def get_suit(self) -> str:
         return self.__suit
 
+    def __repr__(self) -> str:
+        return self.__rank + self.__suit
+
 
 class Deck():
 
@@ -66,17 +69,23 @@ class Deck():
 class Hand():
 
     def __init__(self, cards: list[Card] = None, bet: int = None):
+        # cards
         if cards is None:
             self.__cards = []
         else:
             if not all([isinstance(card, Card) for card in cards]):
                 raise ValueError("All passed cards must be Card objects.")
             self.__cards = cards
-        if not isinstance(bet, int):
-            raise ValueError("Bet must be an integer.")
-        if bet < Settings.MINIMUM_BET:
-            raise ValueError("Bet must be greater than minimum bet.")
-        self.__bet = bet
+        # bet
+        if bet is None:
+            self.__bet = None
+        else:
+            if not isinstance(bet, int):
+                raise ValueError("Bet must be an integer.")
+            if bet < Settings.MINIMUM_BET:
+                raise ValueError("Bet must be greater than minimum bet.")
+            self.__bet = bet
+        # is_active
         self.__is_active = True
 
     def is_active(self) -> bool:
@@ -96,7 +105,7 @@ class Hand():
         if len(hand) == 0:
             raise ValueError("Hand cannot be empty.")
         # First, extract the ranks from the hand
-        ranks = [rank for (rank, suit) in hand]
+        ranks = [card.get_rank() for card in hand]
         # Replace the jacks, queens and kings with a ten
         ranks = list(map(lambda rank: "10" if rank in {
             "J", "Q", "K"} else rank, ranks))

@@ -1,3 +1,4 @@
+from settings import Settings
 from blackjack import Asker
 from cards import Deck, Card, Hand
 from has_hands import Player
@@ -119,33 +120,165 @@ def test_take_card_from_deck_empty_deck():
 
 # __init__()
 
+
 def test_hand_empty():
+    """__init__(): by default, empty list of cards"""
     assert Hand()._Hand__cards == []
 
 
-def test_hand_no_bet():
-    assert Hand()._Hand__bet is None
+def test_hand_non_cards():
+    """__init__(): cards passed must be card objects"""
+    with pytest.raises(ValueError):
+        Hand(cards=[("A", "H"), ("K", "D")])
 
 
 def test_hand_cards():
+    """__init__(): passed cards correctly"""
     cards = [Card("A", "H"), Card("3", "D")]
-    assert Hand(cards).Hand__cards == cards
+    assert Hand(cards)._Hand__cards == cards
 
 
 def test_hand_bet():
-    assert Hand(bet=1000).
+    """__init__(): bet stored after hand created"""
+    assert Hand(bet=1000)._Hand__bet == 1000
+
+
+def test_hand_no_bet():
+    """__init__(): by default, bet is none"""
+    assert Hand()._Hand__bet is None
+
+
+def test_hand_invalid_bet():
+    """__init__(): bet must be an integer"""
+    with pytest.raises(ValueError):
+        Hand(bet="1000")
+
+
+def test_hand_bet_just_big_enough():
+    """__init__(): minimum bet allowed"""
+    hand = Hand(bet=Settings.MINIMUM_BET)
+    assert hand._Hand__bet == Settings.MINIMUM_BET
+
+
+def test_hand_bet_too_small():
+    """__init__(): less than minimum bet is not allowed"""
+    with pytest.raises(ValueError):
+        Hand(bet=Settings.MINIMUM_BET - 1)
+
+
+def test_hand_is_active_default():
+    """__init__(): by default, hand is active"""
+    assert Hand()._Hand__is_active
 
 
 # is_active()
 
 
+def test_hand_is_active_true():
+    """is_active(): method returns is active when true"""
+    hand = Hand()
+    hand._Hand__is_active = True
+    assert hand.is_active()
+
+
+def test_hand_is_active_false():
+    """is_active(): method returns is active when false"""
+    hand = Hand()
+    hand._Hand__is_active = False
+    assert not hand.is_active()
+
+
 # get_bet()
+
+
+def test_hand_get_bet():
+    """get_bet(): bet returned as expected"""
+    hand = Hand(bet=10000)
+    assert hand.get_bet() == 10000
 
 
 # add_card()
 
 
+def test_hand_add_card():
+    """add_card(): card added as expected"""
+    cards = [Card("A", "H"), Card("K", "D")]
+    hand = Hand(cards=cards.copy())
+    new_card = Card("3", "C")
+    hand.add_card(new_card)
+    assert hand._Hand__cards == cards + [new_card]
+
+
+def test_hand_add_card_invalid():
+    """add_card(): card must be card object"""
+    with pytest.raises(ValueError):
+        Hand().add_card(("A", "H"))
+
+
 # get_score()
+
+
+def test_hand_get_score_just_numbers():
+    """Hand.get_score(): just numbered cards add correctly"""
+    assert Hand([Card("2", "H"), Card("5", "C"),
+                Card("9", "D")]).get_score() == 16
+
+
+def test_hand_get_score_ace_11():
+    """Hand.get_score(): single ace is treated as 11"""
+    assert Hand([Card("A", "H"), Card("5", "C")]).get_score() == 16
+
+
+def test_hand_get_score_ace_1():
+    """Hand.get_score(): single ace is treated as 1"""
+    assert Hand([Card("A", "H"), Card("5", "C"),
+                Card("9", "D")]).get_score() == 15
+
+
+def test_hand_get_score_double_ace():
+    """Hand.get_score(): double aces, one is 1 and another 11"""
+    assert Hand([Card("A", "H"), Card("A", "C")]).get_score() == 12
+
+
+def test_hand_get_score_triple_ace():
+    """Hand.get_score(): triple aces, 1 ,1 and 11"""
+    assert Hand([Card("A", "H"), Card("A", "C"),
+                Card("A", "D")]).get_score() == 13
+
+
+def test_hand_get_score_blackjack_single_ace():
+    """Hand.get_score(): ace is an 11 when score could be 21"""
+    assert Hand([Card("A", "H"), Card("K", "C")]).get_score() == 21
+
+
+def test_hand_get_score_blackjack_double_ace():
+    """Hand.get_score(): aces are 1 and 11 when score could be 21"""
+    assert Hand([Card("A", "H"), Card("10", "C"),
+                Card("A", "D")]).get_score() == 12
+
+
+def test_hand_get_score_blackjack_test1():
+    """Hand.get_score(): """
+    assert Hand([Card("A", "H"), Card("7", "C"),
+                Card("6", "D")]).get_score() == 14
+
+
+def test_hand_get_score_blackjack_test2():
+    """Hand.get_score(): """
+    assert Hand([Card("A", "H"), Card("7", "C"), Card("6", "D"),
+                Card("7", "D")]).get_score() == 21
+
+
+def test_hand_get_score_blackjack_test3():
+    """Hand.get_score(): """
+    assert Hand([Card("A", "H"), Card("7", "C"), Card("6", "D"),
+                Card("8", "D")]).get_score() == 22
+
+
+def test_hand_get_score_empty_hand():
+    """Hand.get_score(): receiving an empty hand raises an error"""
+    with pytest.raises(ValueError):
+        Hand([]).get_score()
 
 
 # is_blackjack()
