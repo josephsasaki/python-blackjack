@@ -5,16 +5,6 @@ import pytest
 from support.testing_util import player_chooses
 
 
-def test_hand_is_blackjack_valid():
-    """Hand.is_blackjack(): valid cards produce a blackjack"""
-    assert Hand([("A", "H"), ("K", "D")]).is_blackjack()
-
-
-def test_hand_is_blackjack_invalid():
-    """Hand.is_blackjack(): valid cards produce a blackjack"""
-    assert not Hand([("A", "H"), ("9", "D")]).is_blackjack()
-
-
 def test_hand_hit_active():
     """Hand.hit(): a hand is hit and remains active"""
     deck = [("Q", "H"), ("K", "D"), ("5", "C")]

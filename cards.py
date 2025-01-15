@@ -138,6 +138,8 @@ class Hand():
     def is_bust(self) -> bool:
         return self.get_score() > 21
 
+    """
+
     def can_split(self, player):
        # Check player has enough money
         if player.purse < self.bet:
@@ -151,7 +153,7 @@ class Hand():
     def can_double_down(self, player):
         return player.purse >= self.bet and len(self.cards) == 2
 
-    """
+    
     def hit(self, deck: Deck) -> None:
         drawn_card = deck.pick()
         self.add_card(drawn_card)

@@ -284,10 +284,24 @@ def test_hand_get_score_empty_hand():
 # is_blackjack()
 
 
+def test_hand_is_blackjack_valid():
+    """is_blackjack(): valid cards produce a blackjack"""
+    assert Hand([Card("A", "H"), Card("K", "D")]).is_blackjack()
+
+
+def test_hand_is_blackjack_invalid():
+    """is_blackjack(): invalid cards do not produce a blackjack"""
+    assert not Hand([Card("A", "H"), Card("9", "D")]).is_blackjack()
+
+
 # is_bust()
 
 
-# can_split()
+def test_hand_is_bust_valid():
+    """is_bust(): valid cards produce a bust"""
+    assert Hand([Card("10", "H"), Card("5", "D"), Card("7", "H")]).is_bust()
 
 
-# can_double_down()
+def test_hand_is_bust_invalid():
+    """is_bust(): valid cards produce a not bust"""
+    assert not Hand([Card("A", "H"), Card("5", "D")]).is_bust()
