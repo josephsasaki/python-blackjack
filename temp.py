@@ -12,7 +12,7 @@ def test_hand_instantiation_cards_passed():
 
 
 def test_hand_instantiation_no_cards_passed():
-    """Hand.__init__(): no cards are passed, so empty list"""
+    """Hand.__init__(): no carads are passed, so empty list"""
     hand = Hand()
     assert hand.cards == []
 

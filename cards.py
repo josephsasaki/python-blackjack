@@ -1,6 +1,5 @@
 
-from has_hands import Player
-
+from settings import Settings
 from random import Random
 
 
@@ -27,8 +26,6 @@ class Card():
 
 class Deck():
 
-    MAX_DECK_PACKS = 5
-
     def __init__(self, cards: list[Card] = None, number_of_decks: int = None):
         if cards is None and number_of_decks is not None:
             self.__cards = []
@@ -42,7 +39,7 @@ class Deck():
     def __generate_deck(self, number_of_decks: int) -> None:
         if not isinstance(number_of_decks, int):
             raise ValueError("Invalid number of decks passed.")
-        if number_of_decks < 0 or number_of_decks > Deck.MAX_DECK_PACKS:
+        if number_of_decks < 0 or number_of_decks > Settings.MAX_DECK_PACKS:
             raise ValueError("Invalid number of decks passed.")
         for _ in range(number_of_decks):
             for suit in Card.SUITS:
@@ -68,15 +65,19 @@ class Deck():
 
 class Hand():
 
-    def __init__(self, cards: list[Card] = None, bet=None):
+    def __init__(self, cards: list[Card] = None, bet: int = None):
         if cards is None:
             self.__cards = []
         else:
             if not all([isinstance(card, Card) for card in cards]):
                 raise ValueError("All passed cards must be Card objects.")
             self.__cards = cards
-        self.__is_active = True
+        if not isinstance(bet, int):
+            raise ValueError("Bet must be an integer.")
+        if bet < Settings.MINIMUM_BET:
+            raise ValueError("Bet must be greater than minimum bet.")
         self.__bet = bet
+        self.__is_active = True
 
     def is_active(self) -> bool:
         return self.__is_active
@@ -88,9 +89,6 @@ class Hand():
         if not isinstance(card, Card):
             raise ValueError("Invalid card object passed.")
         self.__cards.append(card)
-
-    def clear_hand(self) -> None:
-        self.__cards = []
 
     def get_score(self) -> int:
         hand = self.__cards
@@ -131,6 +129,20 @@ class Hand():
     def is_bust(self) -> bool:
         return self.get_score() > 21
 
+    def can_split(self, player):
+       # Check player has enough money
+        if player.purse < self.bet:
+            return False
+        if len(self.cards) != 2:
+            return False
+        if self.cards[0][0] != self.cards[1][0]:
+            return False
+        return True
+
+    def can_double_down(self, player):
+        return player.purse >= self.bet and len(self.cards) == 2
+
+    """
     def hit(self, deck: Deck) -> None:
         drawn_card = deck.pick()
         self.add_card(drawn_card)
@@ -141,16 +153,6 @@ class Hand():
 
     def stick(self) -> None:
         self.__is_active = False
-
-    def can_split(self, player: Player):
-        # Check player has enough money
-        if player.purse < self.bet:
-            return False
-        if len(self.cards) != 2:
-            return False
-        if self.cards[0][0] != self.cards[1][0]:
-            return False
-        return True
 
     def split(self, deck: list[(str)], player):
         # Take the further bet from the player
@@ -164,12 +166,10 @@ class Hand():
         # give player the new hand
         player.give_hand(split_hand)
 
-    def can_double_down(self, player):
-        return player.purse >= self.bet and len(self.cards) == 2
-
     def double_down(self, deck, player):
         # Take the further bet from the player
         player.purse -= self.bet
         self.hit(deck)
         self.bet *= 2
         self.is_active = False
+    """

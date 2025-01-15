@@ -1,10 +1,10 @@
+from cards import Deck
+from has_hands import Player
 
 
 class Asker():
 
     INVALID_RESPONSE = "Invalid response. Please try again."
-    MAX_PLAYERS = 5
-    MINIMUM_BET = 500
 
     def ask_number_of_decks() -> int:
         """
