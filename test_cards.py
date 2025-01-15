@@ -1,8 +1,5 @@
 from settings import Settings
-from blackjack import Asker
 from cards import Deck, Card, Hand
-from has_hands import Player
-
 
 from support.testing_util import player_chooses
 
@@ -171,6 +168,18 @@ def test_hand_is_active_default():
     assert Hand()._Hand__is_active
 
 
+# number_of_cards()
+
+def test_hand_number_of_cards_zero():
+    hand = Hand()
+    assert hand.number_of_cards() == 0
+
+
+def test_hand_number_of_cards_multiple():
+    hand = Hand(cards=[Card("A", "H"), Card("A", "H")])
+    assert hand.number_of_cards() == 2
+
+
 # is_active()
 
 
@@ -185,6 +194,16 @@ def test_hand_is_active_false():
     """is_active(): method returns is active when false"""
     hand = Hand()
     hand._Hand__is_active = False
+    assert not hand.is_active()
+
+
+# deactivate()
+
+def test_hand_deactivate():
+    """deactivate(): hand is active becomes false"""
+    hand = Hand()
+    assert hand.is_active()
+    hand.deactivate()
     assert not hand.is_active()
 
 
@@ -305,3 +324,22 @@ def test_hand_is_bust_valid():
 def test_hand_is_bust_invalid():
     """is_bust(): valid cards produce a not bust"""
     assert not Hand([Card("A", "H"), Card("5", "D")]).is_bust()
+
+
+# has_pair()
+
+
+def test_hand_has_pair_not_two():
+    """has_pair(): if there aren't two cards, return false"""
+    assert not Hand([Card("5", "H"), Card(
+        "5", "D"), Card("5", "D")]).has_pair()
+
+
+def test_hand_has_pair_not_same():
+    """has_pair(): two cards but different rank, return false"""
+    assert not Hand([Card("5", "D"), Card("4", "D")]).has_pair()
+
+
+def test_hand_has_pair():
+    """has_pair(): returns true"""
+    assert Hand([Card("5", "H"), Card("5", "D")]).has_pair()

@@ -88,8 +88,14 @@ class Hand():
         # is_active
         self.__is_active = True
 
+    def number_of_cards(self) -> int:
+        return len(self.__cards)
+
     def is_active(self) -> bool:
         return self.__is_active
+
+    def deactivate(self) -> None:
+        self.__is_active = False
 
     def get_bet(self) -> int:
         return self.__bet
@@ -138,49 +144,9 @@ class Hand():
     def is_bust(self) -> bool:
         return self.get_score() > 21
 
-    """
-
-    def can_split(self, player):
-       # Check player has enough money
-        if player.purse < self.bet:
+    def has_pair(self) -> bool:
+        if self.number_of_cards() != 2:
             return False
-        if len(self.cards) != 2:
-            return False
-        if self.cards[0][0] != self.cards[1][0]:
+        if self.__cards[0].get_rank() != self.__cards[1].get_rank():
             return False
         return True
-
-    def can_double_down(self, player):
-        return player.purse >= self.bet and len(self.cards) == 2
-
-    
-    def hit(self, deck: Deck) -> None:
-        drawn_card = deck.pick()
-        self.add_card(drawn_card)
-        if self.get_score() >= 21:
-            self.__is_active = False
-        if len(self.cards) == 5:
-            self.__is_active = False
-
-    def stick(self) -> None:
-        self.__is_active = False
-
-    def split(self, deck: list[(str)], player):
-        # Take the further bet from the player
-        player.purse -= self.bet
-        # Take the second card and produce a new hand
-        second_card = self.cards.pop()
-        split_hand = Hand(cards=[second_card], bet=self.bet)
-        # Hit each hand with a new card
-        self.add_card(deck.pop())
-        split_hand.add_card(deck.pop())
-        # give player the new hand
-        player.give_hand(split_hand)
-
-    def double_down(self, deck, player):
-        # Take the further bet from the player
-        player.purse -= self.bet
-        self.hit(deck)
-        self.bet *= 2
-        self.is_active = False
-    """
