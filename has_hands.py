@@ -64,30 +64,30 @@ class Player(HasHands):
     def can_double_down(self, hand: Hand):
         return self.__purse >= hand.get_bet() and hand.number_of_cards() == 2
 
-    def split(self, deck: list[(str)], player):
+    def split(self, hand: Hand, deck: Deck):
         # Take the further bet from the player
-        player.purse -= self.bet
+        self.__purse -= hand.get_bet()
         # Take the second card and produce a new hand
-        second_card = self.cards.pop()
-        split_hand = Hand(cards=[second_card], bet=self.bet)
+        second_card = hand.pop_card()
+        split_hand = Hand(cards=[second_card], bet=hand.get_bet())
         # Hit each hand with a new card
-        self.add_card(deck.pop())
-        split_hand.add_card(deck.pop())
+        self.hit(hand, deck)
+        self.hit(split_hand, deck)
         # give player the new hand
-        player.give_hand(split_hand)
+        self.give_hand(split_hand)
 
-    def double_down(self, deck, player):
+    def double_down(self, hand: Hand, deck: Deck):
         # Take the further bet from the player
-        player.purse -= self.bet
-        self.hit(deck)
-        self.bet *= 2
-        self.is_active = False
+        self.__purse -= hand.get_bet()
+        self.hit(hand, deck)
+        hand.double_bet()
+        hand.deactivate()
 
 
 class Dealer(HasHands):
 
     def upcard(self):
-        return self.hands[0].cards[1]
+        return self.__hands[0].get_card_by_index(1)
 
     def hole_card(self):
-        return self.hands[0].cards[0]
+        return self.__hands[0].get_card_by_index(0)

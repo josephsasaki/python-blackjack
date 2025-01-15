@@ -343,3 +343,37 @@ def test_hand_has_pair_not_same():
 def test_hand_has_pair():
     """has_pair(): returns true"""
     assert Hand([Card("5", "H"), Card("5", "D")]).has_pair()
+
+
+# pop_card()
+
+
+def test_hand_pop_card():
+    """pop_card(): check the correct card is returned"""
+    card1 = Card("A", "H")
+    card2 = Card("K", "D")
+    hand = Hand([card1, card2])
+    assert hand.pop_card() == card2
+    assert hand.number_of_cards() == 1
+
+
+# double_bet()
+
+
+def test_hand_double_bet():
+    """double_bet(): the bet doubles"""
+    hand = Hand(bet=10000)
+    hand.double_bet()
+    assert hand.get_bet() == 20000
+
+
+# get_card_by_index()
+
+
+def test_hand_get_card_by_index():
+    """get_card_by_index(): the bet doubles"""
+    card1 = Card("A", "H")
+    card2 = Card("K", "D")
+    hand = Hand([card1, card2])
+    assert hand.get_card_by_index(0) == card1
+    assert hand.get_card_by_index(1) == card2

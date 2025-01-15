@@ -150,3 +150,12 @@ class Hand():
         if self.__cards[0].get_rank() != self.__cards[1].get_rank():
             return False
         return True
+
+    def pop_card(self) -> Card:
+        return self.__cards.pop()
+
+    def double_bet(self) -> None:
+        self.__bet *= 2
+
+    def get_card_by_index(self, index: int) -> Card:
+        return self.__cards[index]
