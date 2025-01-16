@@ -14,10 +14,6 @@ import pytest
 # give_hand()
 
 
-def test_has_hands_give_hand():
-    """give_hand(): test a hand is appended"""
-
-
 # get_next_hand()
 
 

@@ -1,4 +1,3 @@
-
 from settings import Settings
 from random import Random
 

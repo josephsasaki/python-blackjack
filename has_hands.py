@@ -1,15 +1,17 @@
 
 from cards import Hand, Deck
+from abc import ABC, abstractmethod
 
 
-class HasHands():
+class HasHands(ABC):
 
+    @abstractmethod
     def __init__(self):
-        self.__hands = []
-        self.__split_count = 0
+        pass
 
-    def get_split_count(self) -> int:
-        return self.__split_count
+    @abstractmethod
+    def reset(self) -> None:
+        pass
 
     def give_hand(self, hand: Hand) -> None:
         if not isinstance(hand, Hand):
@@ -21,10 +23,6 @@ class HasHands():
             if hand.is_active():
                 return hand
         return None
-
-    def reset(self) -> None:
-        self.__hands = []
-        self.__split_count = 0
 
     def hit(self, hand: Hand, deck: Deck) -> None:
         drawn_card = deck.pick()
@@ -45,7 +43,8 @@ class Player(HasHands):
             raise ValueError("Name cannot be empty.")
         if not isinstance(purse, int):
             raise ValueError("Purse amount must be an integer.")
-        super().__init__()
+        self.__hands = []
+        self.__split_count = 0
         self.__name = name
         self.__purse = purse
 
@@ -54,6 +53,9 @@ class Player(HasHands):
 
     def get_purse(self):
         return self.__purse
+
+    def get_split_count(self) -> int:
+        return self.__split_count
 
     def can_split(self, hand: Hand):
         # Check player has enough money
@@ -83,8 +85,18 @@ class Player(HasHands):
         hand.double_bet()
         hand.deactivate()
 
+    def reset(self) -> None:
+        self.__hands = []
+        self.__split_count = 0
+
 
 class Dealer(HasHands):
+
+    def __init__(self):
+        self.__hands = []
+
+    def reset(self) -> None:
+        self.__hands = []
 
     def upcard(self):
         return self.__hands[0].get_card_by_index(1)

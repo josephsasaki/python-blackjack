@@ -1,9 +1,7 @@
-from settings import Settings
-from cards import Deck, Card, Hand
-
-from support.testing_util import player_chooses
-
 import pytest
+from support.testing_util import player_chooses
+from cards import Deck, Card, Hand
+from settings import Settings
 
 
 # ----------- CARD -----------
