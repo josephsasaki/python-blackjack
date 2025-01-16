@@ -3,13 +3,13 @@ from cards import Hand, Card
 from has_hands import Player, Dealer
 from settings import Settings
 
+from rich import box
 from rich.console import Console, Group
 from rich.panel import Panel
 from rich.align import Align
 from rich.padding import Padding
 from rich.layout import Layout
-from rich.prompt import Prompt
-from rich.rule import Rule
+from rich.columns import Columns
 from time import sleep
 
 
@@ -26,7 +26,7 @@ TITLE_GRAPHIC = [
 
 
 HAND_GRAPHIC_5 = [
-    "[  ]        ╭───────╮",
+    "            ╭───────╮",
     "         ╭──┤ZZ     │",
     "      ╭──┤YY│%      │",
     "   ╭──┤XX│$ │      %│",
@@ -38,7 +38,7 @@ HAND_GRAPHIC_5 = [
     "╰───────╯            ",
 ]
 HAND_GRAPHIC_4 = [
-    "[  ]                 ",
+    "                     ",
     "         ╭───────╮   ",
     "      ╭──┤YY     │   ",
     "   ╭──┤XX│$      │   ",
@@ -50,7 +50,7 @@ HAND_GRAPHIC_4 = [
     "╰───────╯            ",
 ]
 HAND_GRAPHIC_3 = [
-    "[  ]                 ",
+    "                     ",
     "                     ",
     "      ╭───────╮      ",
     "   ╭──┤XX     │      ",
@@ -62,7 +62,7 @@ HAND_GRAPHIC_3 = [
     "╰───────╯            ",
 ]
 HAND_GRAPHIC_2 = [
-    "[  ]                 ",
+    "                     ",
     "                     ",
     "                     ",
     "   ╭───────╮         ",
@@ -74,7 +74,7 @@ HAND_GRAPHIC_2 = [
     "╰───────╯            ",
 ]
 HAND_GRAPHIC_1 = [
-    "[  ]                 ",
+    "                     ",
     "                     ",
     "                     ",
     "                     ",
@@ -112,7 +112,7 @@ Align.left(
 
 class Interface():
 
-    PANEL_WIDTH = 160
+    PANEL_WIDTH = 180
     PANEL_HEIGHT = 20
 
     def __init__(self):
@@ -122,8 +122,12 @@ class Interface():
     def pound(pennies: int) -> str:
         return f"{(pennies/100):.2f}"
 
+    def division_width(self, n: int) -> int:
+        widths = [180, 89, 59, 44, 35]
+        return widths[n-1]
+
     def __suit_bar(self):
-        return "".join(["♠♣♥♦"]*40)
+        return "".join(["♠♣♥♦"]*45)
 
     def display_title_screen(self):
         self.console.clear()
@@ -302,54 +306,129 @@ class Interface():
         )
         self.console.print(content)
 
-    def display_table_hands(self, players: list[Player], dealer: Dealer):
+    def display_table_hands(self, players: list[Player], dealer: Dealer, can_proceed: bool = False):
         self.console.clear()
-        table = Layout()
-        table.split_column(
-            Layout(name="upper"),
-            Layout(name="lower")
+        # First, make the dealer panel
+        dealer_renderable = make_hand_graphic(dealer.get_next_hand())
+        dealer_panel = Panel(
+            renderable=Align.center(dealer_renderable, vertical="middle"),
+            subtitle=f"score: {dealer.get_next_hand().get_score()}",
+            title="[bold]Dealer[/bold]",
         )
-        player_layouts = [Layout(name=player.get_name()) for player in players]
-        table["lower"].split_row(*player_layouts)
+        # Next, get all the player panels
+        player_renderables = []
+        for player in players:
+            hand = player.get_next_hand()
+            score = hand.get_score()
+            bet = self.pound(hand.get_bet())
+            renderable = make_hand_graphic(hand)
+            player_renderables.append(Panel(
+                renderable=Align.center(renderable, vertical="middle"),
+                title=f"[bold]{player.get_name()}[/bold]",
+                subtitle=f"score: {score}, bet: £{bet}",
+                expand=True,
+                width=self.division_width(len(players))
+            ))
+        # Make layout
+        columns = Columns(
+            player_renderables,
+            expand=True,
+            equal=True,
+        )
+        content_list = [
+            self.__suit_bar(),
+            dealer_panel,
+            columns,
+        ]
+        if can_proceed:
+            content_list.append(Padding("", (1, 0, 0, 0)))
+            content_list.append(Align.left(
+                "Once you are ready to proceed, please press [bold]ENTER[/bold]."))
+        content = Group(*content_list)
+        self.console.print(content)
+        if not can_proceed:
+            sleep(0)
+        else:
+            _ = input()
+
+    def display_player_turn(self, player: Player, dealer: Dealer, action_list: list[str]) -> str:
+        content_list = self.__content_player_hands(player, dealer)
+        ask_list = self.__content_ask_action(action_list)
+        content = Group(*content_list)
+        self.console.print(content)
+
+    def __content_player_hands(self, player: Player, dealer: Dealer):
+        self.console.clear()
+        # First, make the dealer panel
+        dealer_renderable = make_hand_graphic(dealer.get_next_hand())
+        dealer_panel = Panel(
+            renderable=Align.center(dealer_renderable, vertical="middle"),
+            subtitle=f"score: {dealer.get_next_hand().get_score()}",
+            title="[bold]Dealer[/bold]",
+        )
+        # Next, get all the player panels
+        player_renderables = []
+        for hand in player.get_hands():
+            score = hand.get_score()
+            bet = self.pound(hand.get_bet())
+            renderable = make_hand_graphic(hand)
+            player_renderables.append(Panel(
+                renderable=Align.center(renderable, vertical="middle"),
+                title=f"[bold]{player.get_name()}[/bold]",
+                subtitle=f"score: {score}, bet: £{bet}",
+                expand=True,
+                width=45,
+                box=box.HEAVY
+            ))
+        # Make layout
+        columns = Columns(
+            player_renderables,
+            expand=True,
+            equal=True,
+        )
+        content_list = [
+            self.__suit_bar(),
+            dealer_panel,
+            columns,
+        ]
+        return content_list
+
+    def __content_ask_action(self, action_list):
+        pass
 
 
 def make_hand_graphic(hand: Hand) -> list[str]:
     """
     Produces a graphic for a hand.
     """
-    number_of_cards = len(hand.cards)
+    number_of_cards = hand.number_of_cards()
+    if number_of_cards == 0:
+        return "\n".join([" "*21 for _ in range(10)])
     hand_graphic = HAND_GRAPHICS[number_of_cards-1].copy()
     # Replace the ranks and suits in the top-left corners
-    for i, card in enumerate(hand.cards):
+    for i, card in enumerate(hand.get_cards_copy()):
         # First, replace the rank
-        rank_replacement = card[0] + " " if card[0] != "10" else "10"
+        rank_replacement = card.get_rank() + " " if card.get_rank() != "10" else "10"
         row_index, column_index = TOP_RANK_REPLACE[i]
         hand_graphic[row_index] = hand_graphic[row_index][:column_index] + \
             rank_replacement + hand_graphic[row_index][column_index+2:]
         # Next, replace the suit
         row_index, column_index = TOP_SUIT_REPLACE[i]
         hand_graphic[row_index] = hand_graphic[row_index][:column_index] + \
-            card[1] + hand_graphic[row_index][column_index+1:]
+            card.get_suit() + hand_graphic[row_index][column_index+1:]
     # Replace the rank and suit on the bottom-right of the top card
-    top_card = hand.cards[-1]
+    top_card = hand.get_card_by_index(-1)
     # Replace the rank
-    rank_replacement = " " + top_card[0] if top_card[0] != "10" else "10"
+    rank_replacement = " " + top_card.get_rank() if top_card.get_rank() != "10" else "10"
     row_index, column_index = BOTTOM_RANK_REPLACE[number_of_cards-1]
     hand_graphic[row_index] = hand_graphic[row_index][:column_index] + \
         rank_replacement + hand_graphic[row_index][column_index+2:]
     # Replace the suit
     row_index, column_index = BOTTOM_SUIT_REPLACE[number_of_cards-1]
     hand_graphic[row_index] = hand_graphic[row_index][:column_index] + \
-        top_card[1] + hand_graphic[row_index][column_index+1:]
-    # Add the hand score
-    string_score = str(hand.get_score())
-    row_index, column_index = SCORE_REPLACE
-    string_score = " " + \
-        string_score if len(string_score) == 1 else string_score
-    hand_graphic[row_index] = hand_graphic[row_index][:column_index] + \
-        string_score + hand_graphic[row_index][column_index+2:]
+        top_card.get_suit() + hand_graphic[row_index][column_index+1:]
 
-    return hand_graphic
+    return "\n".join(hand_graphic)
 
 
 def make_all_hands_graphic(hands: list[Hand]) -> list[str]:

@@ -87,6 +87,9 @@ class Hand():
         # is_active
         self.__is_active = True
 
+    def get_cards_copy(self) -> list[Card]:
+        return self.__cards.copy()
+
     def number_of_cards(self) -> int:
         return len(self.__cards)
 
@@ -106,9 +109,9 @@ class Hand():
 
     def get_score(self) -> int:
         hand = self.__cards
-        # Check list is not empty
+        # Check list is empty
         if len(hand) == 0:
-            raise ValueError("Hand cannot be empty.")
+            return 0
         # First, extract the ranks from the hand
         ranks = [card.get_rank() for card in hand]
         # Replace the jacks, queens and kings with a ten

@@ -426,12 +426,11 @@ def player_turn(player: Player, deck: list[(str)]):
     """
     while player.get_next_hand() is not None:
         double_downed = False
-        hand = player.get_next_hand()
-        print_player_hand(hand)
+        hand: Hand = player.get_next_hand()
         # Check the hand is not a blackjack from draw
         if hand.get_score() == 21:
             hand.is_active = False
-            print_blackjack_message()
+            print_player_hand(hand)
             continue
         # Get the action choices
         action_choices = ["hit", "stick"]
@@ -539,7 +538,7 @@ def round(number_of_decks: int, players: list[Player], dealer: Dealer, seed: int
         print_player_turn_title(player)
         player_turn(player, shuffled_deck)
 
-    # Complete the dealer turn, only is allowed
+    # Complete the dealer turn, only if allowed
     if complete_dealer_turn(players, dealer):
         dealer_turn(dealer, shuffled_deck)
 
