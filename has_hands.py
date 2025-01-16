@@ -1,17 +1,16 @@
 
 from cards import Hand, Deck
-from abc import ABC, abstractmethod
 
 
-class HasHands(ABC):
+class HasHands():
 
-    @abstractmethod
     def __init__(self):
-        pass
+        self.__hands = []
+        self.__split_count = 0
 
-    @abstractmethod
     def reset(self) -> None:
-        pass
+        self.__hands = []
+        self.__split_count = 0
 
     def give_hand(self, hand: Hand) -> None:
         if not isinstance(hand, Hand):
@@ -43,8 +42,7 @@ class Player(HasHands):
             raise ValueError("Name cannot be empty.")
         if not isinstance(purse, int):
             raise ValueError("Purse amount must be an integer.")
-        self.__hands = []
-        self.__split_count = 0
+        super().__init__()
         self.__name = name
         self.__purse = purse
 
@@ -91,12 +89,6 @@ class Player(HasHands):
 
 
 class Dealer(HasHands):
-
-    def __init__(self):
-        self.__hands = []
-
-    def reset(self) -> None:
-        self.__hands = []
 
     def upcard(self):
         return self.__hands[0].get_card_by_index(1)

@@ -1,6 +1,6 @@
 # pylint: skip-file
 
-import graphics
+import interface
 import pytest
 from models import Hand
 
@@ -18,7 +18,7 @@ def test_make_hand_graphic_one():
                "│      H│            ",
                "│      A│            ",
                "╰───────╯        [11]"]
-    assert graphics.make_hand_graphic(hand) == graphic
+    assert interface.make_hand_graphic(hand) == graphic
 
 
 def test_make_hand_graphic_two():
@@ -34,7 +34,7 @@ def test_make_hand_graphic_two():
                "│  │      2│         ",
                "│  ╰────┬──╯         ",
                "╰───────╯        [13]"]
-    assert graphics.make_hand_graphic(hand) == graphic
+    assert interface.make_hand_graphic(hand) == graphic
 
 
 def test_make_hand_graphic_three():
@@ -50,7 +50,7 @@ def test_make_hand_graphic_three():
                "│  │  ╰────┬──╯      ",
                "│  ╰────┬──╯         ",
                "╰───────╯        [18]"]
-    assert graphics.make_hand_graphic(hand) == graphic
+    assert interface.make_hand_graphic(hand) == graphic
 
 
 def test_make_hand_graphic_four():
@@ -66,7 +66,7 @@ def test_make_hand_graphic_four():
                "│  │  ╰────┬──╯      ",
                "│  ╰────┬──╯         ",
                "╰───────╯        [18]"]
-    assert graphics.make_hand_graphic(hand) == graphic
+    assert interface.make_hand_graphic(hand) == graphic
 
 
 def test_make_hand_graphic_five():
@@ -82,7 +82,7 @@ def test_make_hand_graphic_five():
                "│  │  ╰────┬──╯      ",
                "│  ╰────┬──╯         ",
                "╰───────╯        [28]"]
-    assert graphics.make_hand_graphic(hand) == graphic
+    assert interface.make_hand_graphic(hand) == graphic
 
 
 def test_make_hand_graphic_10():
@@ -99,5 +99,5 @@ def test_make_hand_graphic_10():
                "│  │  ╰────┬──╯      ",
                "│  ╰────┬──╯         ",
                "╰───────╯        [50]"]
-    print("\n".join(graphics.make_hand_graphic(hand)))
-    assert graphics.make_hand_graphic(hand) == graphic
+    print("\n".join(interface.make_hand_graphic(hand)))
+    assert interface.make_hand_graphic(hand) == graphic

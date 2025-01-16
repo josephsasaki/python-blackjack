@@ -1,69 +1,12 @@
-from cards import Deck
+from cards import Deck, Hand, Card
 from has_hands import Player, Dealer
+from interface import Interface
+from settings import Settings
 
 
 class Asker():
 
     INVALID_RESPONSE = "Invalid response. Please try again."
-
-    @staticmethod
-    def ask_number_of_decks() -> int:
-        """
-        Get the number of decks that game will be played with from the user.
-        """
-        number_of_decks = input("How many decks do you want to play with? : ")
-        try:
-            number_of_decks = int(number_of_decks)
-            if number_of_decks not in range(1, Deck.MAX_DECK_PACKS+1):
-                raise ValueError("Invalid number of decks.")
-            else:
-                return number_of_decks
-        except ValueError:
-            print(Asker.INVALID_RESPONSE)
-            return Asker.ask_number_of_decks()
-
-    @staticmethod
-    def ask_number_of_players() -> int:
-        """
-        The user is asked for the number of players, and this is validated.
-        """
-        number_of_players = input("How many players are there? : ")
-        try:
-            number_of_players = int(number_of_players)
-            if number_of_players not in range(1, Asker.MAX_PLAYERS+1):
-                raise ValueError("Number of players not in valid range.")
-            else:
-                return number_of_players
-        except ValueError:
-            print(Asker.INVALID_RESPONSE)
-            return Asker.ask_number_of_players()
-
-    @staticmethod
-    def ask_player_name(index: int) -> str:
-        """
-        Ask the player for their name, ensuring it is not empty.
-        """
-        name = input(f"What is the name of Player {index + 1}? : ")
-        if name == "":
-            return f"Player {index + 1}"
-        else:
-            return name
-
-    @staticmethod
-    def ask_player_purse() -> int:
-        """
-        Ask the player for how much they have in their purse, ensuring valid input.
-        """
-        amount = input("How much money is in your purse? : ")
-        try:
-            amount = int(amount)
-            if amount < Asker.MINIMUM_BET:
-                raise ValueError(
-                    "Purse amount must be greater than minimum bet.")
-            return amount
-        except ValueError:
-            print(Asker.INVALID_RESPONSE)
-            return Asker.ask_player_purse()
 
     @staticmethod
     def ask_player_bet(player: Player) -> int:
@@ -100,28 +43,57 @@ class Asker():
         return action
 
 
-class Round():
-    pass
-
-
 class Blackjack():
 
     def __init__(self):
+        self.__deck = None
         self.__players = []
         self.__dealer = Dealer()
+        self.__interface = Interface()
 
-    def define_players(self):
-        player_quantity = Asker.ask_number_of_players()
-        players = []
-        for i in range(player_quantity):
-            name = Asker.ask_player_name(i)
-            purse = Asker.ask_player_purse()
+    def title(self):
+        # Title screen
+        self.__interface.display_title_screen()
+
+    def setup(self):
+        # Deck settings screen
+        number_of_decks = self.__interface.ask_number_of_decks()
+        self.__deck = Deck(number_of_decks=number_of_decks)
+        # Player quantity screen
+        number_of_players = self.__interface.ask_number_of_players()
+        # Player information
+        for i in range(1, number_of_players + 1):
+            name, purse = self.__interface.ask_player_name_and_purse(i)
             player = Player(name, purse)
             self.__players.append(player)
 
+    def deal_initial_hands(self, initial_bets: dict[str, int]) -> None:
+        """
+        Simulates dealing cards to each player and the dealer.
+        """
+        # First, give each player and dealer an empty hand with bet
+        for player in self.__players:
+            empty_hand = Hand(bet=initial_bets[player.get_name()])
+            player.give_hand(empty_hand)
+        self.__dealer.give_hand(Hand())
+        # Next, go through each player and give cards to hand
+        for _ in range(2):
+            for person in self.__players + [self.__dealer]:
+                hand = person.get_next_hand()
+                person.hit(hand, self.__deck)
+                self.__interface.display_table_hands(
+                    self.__players, self.__dealer)
+
+    def play_round(self):
+        # Take initial bets
+        initial_bets = self.__interface.ask_player_initial_bets(self.__players)
+        # Deal cards
+        self.deal_initial_hands(initial_bets)
+
     def play(self):
-        # Print intro screen
-        self.define_players()
+        self.title()
+        self.setup()
+        self.play_round()
 
 
 if __name__ == "__main__":
