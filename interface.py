@@ -2,8 +2,10 @@
 from cards import Hand, Card
 from has_hands import Player, Dealer
 from settings import Settings
+from collections.abc import Callable
 
 from rich import box
+from rich.console import ConsoleRenderable
 from rich.console import Console, Group
 from rich.panel import Panel
 from rich.align import Align
@@ -23,8 +25,6 @@ TITLE_GRAPHIC = [
     ".........│╰──╯│.│╰───╮.││..││.│╰───╮.││.│.│.│╰─╯│..││..││.│╰───╮.││.│.│.",
     ".........╰────╯.╰────╯.╰╯..╰╯.╰────╯.╰╯.╰─╯.╰───╯..╰╯..╰╯.╰────╯.╰╯.╰─╯.",
 ]
-
-
 HAND_GRAPHIC_5 = [
     "            ╭───────╮",
     "         ╭──┤ZZ     │",
@@ -98,16 +98,91 @@ BOTTOM_RANK_REPLACE = [(8, 6), (7, 9), (6, 12), (5, 15), (4, 18)]
 BOTTOM_SUIT_REPLACE = [(7, 7), (6, 10), (5, 13), (4, 16), (3, 19)]
 SCORE_REPLACE = (0, 1)
 HAND_GAP = "  │  "
+CONSOLE_WIDTH = 180
+CONSOLE = Console(width=CONSOLE_WIDTH)
 
-# "\n".join(TITLE_GRAPHIC).replace(".", " ")
-"""
-Padding("", (1, 0, 0, 0)),
-Align.left(
-    "Please ensure your console window is large enough to fit the content."),
-Padding("", (1, 0, 0, 0)),
-Align.left(
-    "Once you are ready to proceed, please press [bold]ENTER[/bold].")
-"""
+
+# ---------- VALIDATION FUNCTIONS ----------
+
+
+def is_valid_enter(user_input: str) -> bool:
+    return True
+
+
+def is_valid_deck_quantity(user_input: str) -> bool:
+    pass
+
+
+def is_valid_player_quantity(user_input: str) -> bool:
+    pass
+
+
+def is_valid_name(user_input: str) -> bool:
+    pass
+
+
+def is_valid_purse_amount(user_input: str) -> bool:
+    pass
+
+
+def is_valid_bet(user_input: str) -> bool:
+    pass
+
+
+def is_valid_action(user_input: str, action_choices: list[str]) -> bool:
+    pass
+
+
+# ---------- UTILITY RENDERABLE FUNCTIONS ----------
+
+
+def make_hand_renderable(hand: Hand) -> str:
+    pass
+
+
+def make_all_player_renderable(players: list[Player]):
+    pass
+
+
+# ---------- DISPLAY FUNCTION ----------
+
+
+def display(content: list[ConsoleRenderable], invalid_message: str, validity_checker: Callable, is_valid: bool) -> str:
+    # Clear the screen
+    CONSOLE.clear()
+    # Check whether error message should be added at end of content.
+    if not is_valid:
+        content.append(invalid_message)
+    # Group content and display
+    grouped_content = Group(*content)
+    CONSOLE.print(grouped_content)
+    # Take user input
+    user_input = input("> ")
+    # Validate user input using validation function
+    is_valid = validity_checker(user_input)
+    if not is_valid:
+        return display(content, invalid_message, validity_checker, is_valid=False)
+    else:
+        return user_input
+
+
+# ---------- BRIDGES ----------
+
+
+def display_title() -> None:
+    content = [
+        Align.center(
+            "\n".join(TITLE_GRAPHIC).replace(".", " "), vertical="middle"),
+        Align.center(
+            "Welcome!", vertical="middle", style="bold"),
+        Padding("", (1, 0, 0, 0)),
+        Align.left(
+            "Please ensure your console window is large enough to fit the content."),
+        Padding("", (1, 0, 0, 0)),
+        Align.left(
+            "Once you are ready to proceed, please press [bold]ENTER[/bold]."),
+    ]
+    return display(content, None, is_valid_enter, True)
 
 
 class Interface():
@@ -455,3 +530,42 @@ if __name__ == "__main__":
     interface.display_title_screen()
     interface.display_deck_screen()
     interface.display_player_quantity_screen()
+
+
+class Asker():
+
+    INVALID_RESPONSE = "Invalid response. Please try again."
+
+    @staticmethod
+    def ask_player_bet(player: Player) -> int:
+        """
+        Ask the player how much they want to bet. Ensure the bet is less than purse amount, and there
+        is sufficient funds in the purse for the minimum bet.
+        """
+        # First, check for sufficient funds
+        if player.purse < Asker.MINIMUM_BET:
+            raise ValueError(
+                "Player should have been removed if insufficient funds for minimum bet.")
+        # Ask for player bet amount
+        bet = input(f"{player.name} : ")
+        try:
+            bet = int(bet)
+            if bet < Asker.MINIMUM_BET or bet > player.purse:
+                raise ValueError
+            return bet
+        except ValueError:
+            print(Asker.INVALID_RESPONSE)
+            return Asker.ask_player_bet(player)
+
+    @staticmethod
+    def ask_player_action(choices: list[str]) -> str:
+        """
+        Ask the player for whether they wish to hit, stick, split or double-down.
+        """
+        # Get player action
+        action = input("Action : ")
+        # Check the action is in the choices
+        if action not in choices:
+            print(Asker.INVALID_RESPONSE)
+            return Asker.ask_player_action(choices)
+        return action

@@ -1,46 +1,7 @@
 from cards import Deck, Hand, Card
 from has_hands import Player, Dealer
-from interface import Interface
+import interface
 from settings import Settings
-
-
-class Asker():
-
-    INVALID_RESPONSE = "Invalid response. Please try again."
-
-    @staticmethod
-    def ask_player_bet(player: Player) -> int:
-        """
-        Ask the player how much they want to bet. Ensure the bet is less than purse amount, and there
-        is sufficient funds in the purse for the minimum bet.
-        """
-        # First, check for sufficient funds
-        if player.purse < Asker.MINIMUM_BET:
-            raise ValueError(
-                "Player should have been removed if insufficient funds for minimum bet.")
-        # Ask for player bet amount
-        bet = input(f"{player.name} : ")
-        try:
-            bet = int(bet)
-            if bet < Asker.MINIMUM_BET or bet > player.purse:
-                raise ValueError
-            return bet
-        except ValueError:
-            print(Asker.INVALID_RESPONSE)
-            return Asker.ask_player_bet(player)
-
-    @staticmethod
-    def ask_player_action(choices: list[str]) -> str:
-        """
-        Ask the player for whether they wish to hit, stick, split or double-down.
-        """
-        # Get player action
-        action = input("Action : ")
-        # Check the action is in the choices
-        if action not in choices:
-            print(Asker.INVALID_RESPONSE)
-            return Asker.ask_player_action(choices)
-        return action
 
 
 class Blackjack():
@@ -49,11 +10,10 @@ class Blackjack():
         self.__deck = None
         self.__players = []
         self.__dealer = Dealer()
-        self.__interface = Interface()
 
     def title(self):
         # Title screen
-        self.__interface.display_title_screen()
+        _ = interface.display_title()
 
     def setup(self):
         # Deck settings screen
@@ -144,7 +104,7 @@ class Blackjack():
         self.__players.append(Player("Ines", 100000))
         self.__players.append(Player("Maria", 100000))
         self.__players.append(Player("Yohei", 100000))
-        self.play_round()
+        # self.play_round()
 
 
 if __name__ == "__main__":
