@@ -79,16 +79,6 @@ class Hand():
         self.__bet = None
         self.__is_active = True
 
-    def get_status(self):
-        if self.is_blackjack():
-            return "Blackjack"
-        elif self.is_bust():
-            return "Bust"
-        elif not self.__is_active:
-            return "Stuck"
-        else:
-            return "Active"
-
     def get_cards_copy(self) -> list[Card]:
         return self.__cards.copy()
 

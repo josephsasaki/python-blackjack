@@ -33,6 +33,20 @@ class HasHands():
     def stick(self, hand: Hand) -> None:
         hand.deactivate()
 
+    def get_hands(self):
+        return self.hands
+
+    def get_hand_status(self, hand: Hand) -> str:
+        if hand.is_blackjack():
+            return "Blackjack"
+        elif hand.is_bust():
+            return "Bust"
+        elif not hand.is_active():
+            return "Stuck"
+        elif self.get_next_hand() is hand:
+            return "Active"
+        return None
+
 
 class Player(HasHands):
 
@@ -46,9 +60,6 @@ class Player(HasHands):
         super().__init__()
         self.__name = name
         self.__purse = purse
-
-    def get_hands(self):
-        return self.hands
 
     def get_name(self):
         return self.__name
@@ -76,7 +87,8 @@ class Player(HasHands):
         self.__purse -= hand.get_bet()
         # Take the second card and produce a new hand
         second_card = hand.pop_card()
-        split_hand = Hand(cards=[second_card], bet=hand.get_bet())
+        split_hand = Hand(cards=[second_card])
+        split_hand.set_bet(hand.get_bet())
         # Hit each hand with a new card
         self.hit(hand, deck)
         self.hit(split_hand, deck)
@@ -93,6 +105,15 @@ class Player(HasHands):
     def reset(self) -> None:
         self.hands = []
         self.split_count = 0
+
+    def get_action_choices(self):
+        hand = self.get_next_hand()
+        actions = ["hit", "stick"]
+        if self.can_split(hand):
+            actions.append("split")
+        if self.can_double_down(hand):
+            actions.append("double-down")
+        return actions
 
 
 class Dealer(HasHands):

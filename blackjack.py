@@ -38,9 +38,10 @@ class Blackjack():
                 interface.display_card_dealing(self.players, self.dealer)
         interface.display_card_dealing(self.players, self.dealer, True)
 
-    def player_turn(self, player: Player, deck: Deck):
+    def player_turn(self, player: Player):
         """
         Complete a round for a player, where they can make decisions about what to do.
+
         """
         while player.get_next_hand() is not None:
             hand: Hand = player.get_next_hand()
@@ -48,24 +49,57 @@ class Blackjack():
             if hand.is_blackjack():
                 hand.deactivate()
                 continue
-            # Get the action choices
-            action_choices = ["hit", "stick"]
-            if player.can_split(hand) and player.get_split_count() < Settings.MAX_SPLITS:
-                action_choices.append("split")
-            if player.can_double_down(hand):
-                action_choices.append("double-down")
             # Get player action and commit action
-            action = self.__interface.display_player_turn(
-                player, self.__dealer, action_choices)
+            action = interface.display_player_turn(
+                player, self.deck, self.players, self.dealer, False)
             # Actions
             if action == "hit":
-                player.hit(hand, deck)
+                player.hit(hand, self.deck)
             elif action == "stick":
                 player.stick(hand)
             elif action == "split":
-                player.split(hand, deck)
+                player.split(hand, self.deck)
             elif action == "double-down":
-                player.double_down(hand, deck)
+                player.double_down(hand, self.deck)
+        _ = interface.display_player_turn(
+            player, self.deck, self.players, self.dealer, True)
+
+    def dealer_should_play(self) -> bool:
+        """
+        Check whether the dealer's turn should be completed. Dealer's turn not completed if:
+        1) All hands are bust
+        2) All hands are blackjacks and dealer has no chance of blackjack
+        """
+        busts = []
+        blackjacks = []
+        for player in self.players:
+            for hand in player.get_hands():
+                busts.append(hand.is_bust())
+                blackjacks.append(hand.is_blackjack())
+        # Check if all busts
+        if all(busts):
+            return False
+        # Check if all blackjacks and dealer can't have blackjack
+        if all(blackjacks) and self.dealer.upcard().get_rank() != "A":
+            return False
+        return True
+
+    def dealer_turn(self):
+        """
+        Complete a round for the dealer.
+        """
+        dealer_hand = self.dealer.get_next_hand()
+        _ = interface.display_dealer_turn(self.players, self.dealer)
+        # Check for blackjack
+        if dealer_hand.is_blackjack():
+            pass
+        while dealer_hand.get_score() < 17:
+            self.dealer.hit(dealer_hand, self.deck)
+            if dealer_hand.is_bust():
+                pass
+            _ = interface.display_dealer_turn(self.players, self.dealer)
+        dealer_hand.is_active = False
+        _ = interface.display_dealer_turn(self.players, self.dealer, True)
 
     def play_round(self):
         # Shuffle deck
@@ -80,8 +114,10 @@ class Blackjack():
         self.deal_cards()
         # Iterate through player turns
         for player in self.players:
-            interface.display_player_turn(
-                player, self.deck, self.players, self.dealer)
+            self.player_turn(player)
+        # Decide whether dealer should have turn
+        if self.dealer_should_play():
+            self.dealer_turn()
 
     def play(self):
         # title

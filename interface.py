@@ -105,29 +105,48 @@ CONSOLE = Console(width=CONSOLE_WIDTH)
 # ---------- VALIDATION FUNCTIONS ----------
 
 
-def is_valid_enter(user_input: str) -> bool | None:
+def is_valid_enter(user_input: str, player: Player) -> bool | None:
+    """
+    Validation function which always returns true. Is used if the display requires
+    the user to press enter to continue, in which case the input does not matter.
+    """
     return True, None
 
 
-def is_valid_deck_quantity(user_input: str) -> bool | None:
+def is_valid_deck_quantity(user_input: str, player: Player) -> bool | None:
+    """
+    Validation function for the number of decks. The number of decks must be
+    between 1 and the maximum number of allowed decks.
+    """
     if user_input not in [str(n) for n in range(1, Settings.MAX_DECK_PACKS+1)]:
         return False, "[bold red]Invalid number of decks. Please try again.[/bold red]"
     return True, None
 
 
-def is_valid_player_quantity(user_input: str) -> bool | None:
+def is_valid_player_quantity(user_input: str, player: Player) -> bool | None:
+    """
+    Validation function for the number of players. The number of players must be
+    between 1 and the maximum number of allowed players.
+    """
     if user_input not in [str(n) for n in range(1, Settings.MAX_PLAYERS+1)]:
         return False, "[bold red]Invalid number of players. Please try again.[/bold red]"
     return True, None
 
 
-def is_valid_name(user_input: str) -> bool:
+def is_valid_name(user_input: str, player: Player) -> bool:
+    """
+    Validation function for a player name. Must not be an empty string.
+    """
     if user_input is None:
         return False, "[bold red]Invalid name. Please try again.[/bold red]"
     return True, None
 
 
-def is_valid_purse_amount(user_input: str) -> bool:
+def is_valid_purse_amount(user_input: str, player: Player) -> bool:
+    """
+    Validation function for a player's purse amount. This must be numeric, and greater
+    than or equal to the minimum bet, to ensure the player can play at least one round.
+    """
     if not user_input.isnumeric():
         return False, "[bold red]Invalid purse amount. Please try again.[/bold red]"
     amount = int(user_input)
@@ -136,51 +155,85 @@ def is_valid_purse_amount(user_input: str) -> bool:
     return True, None
 
 
-def is_valid_bet(user_input: str) -> bool:
+def is_valid_bet(user_input: str, player: Player) -> bool:
+    """
+    Validation function for a hand bet. This must be greater than the minimum bet, but less
+    than the player's purse.
+    """
     if not user_input.isnumeric():
         return False, "[bold red]Invalid bet amount. Please try again.[/bold red]"
     amount = int(user_input)
     if amount < Settings.MINIMUM_BET/100:
         return False, "[bold red]Invalid bet amount. Please try again.[/bold red]"
+    if amount > player.get_purse():
+        return False, "[bold red]Invalid bet amount. Please try again.[/bold red]"
     return True, None
 
 
-def is_valid_action(user_input: str, action_choices: list[str]) -> bool:
-    pass
+def is_valid_action(user_input: str, player: Player) -> bool:
+    """
+    Validation function for a player's action choice. The player must have chosen a 
+    valid action given the hand.
+    """
+    action_choices = player.get_action_choices()
+    if user_input not in action_choices:
+        return False, "[bold red]Invalid action. Please try again.[/bold red]"
+    return True, None
 
 
 # ---------- UTILITY & RENDERABLE FUNCTIONS ----------
 
 
 def pound(pennies: int) -> str:
+    """
+    Converts number of pennies into a formatted string of pounds and pennies.
+    """
     return f"£{(pennies/100):.2f}"
 
 
 def panel_width(n_in_row: int) -> int:
+    """
+    Returns a panel width to ensure all n_in_rows panel fit across screen.
+    """
+    if n_in_row not in {0, 1, 2, 3, 4}:
+        raise ValueError("Invalid number of panels across screen.")
     widths = [180, 89, 59, 44, 35]
     return widths[n_in_row-1]
 
 
 def make_title_renderable() -> ConsoleRenderable:
+    """
+    Takes the title graphic and converts to a formatted string.
+    """
     return Align.center("\n".join(TITLE_GRAPHIC).replace(".", " "), vertical="middle")
 
 
 def make_padding() -> ConsoleRenderable:
+    """
+    Returns a 1 line padding object to place between renderables.
+    """
     return Padding("", (1, 0, 0, 0))
 
 
-def row_replace(graphic: list[str], row_index: int, column_index: int, replace: str) -> str:
+def row_replace(graphic: list[str], row_index: int, column_index: int, replace: str) -> None:
+    """
+    Takes a card graphic and replaces a rank or suit in a particular position. Function
+    works in place, so does not return anything.
+    """
     graphic[row_index] = graphic[row_index][:column_index] + \
         replace + graphic[row_index][column_index+len(replace):]
 
 
 def make_hand_graphic(hand: Hand, hide_hole: bool) -> str:
     """
-    Produces a graphic for a hand.
+    Produces a graphic for a hand. Takes a global graphic object and places the correct
+    card symbols to produce the graphic.
     """
     number_of_cards = hand.number_of_cards()
+    # First, check whether the hand is empty
     if number_of_cards == 0:
         return "\n".join([" "*21 for _ in range(10)])
+    # Get the relevant blank hand graphic
     hand_graphic = HAND_GRAPHICS[number_of_cards-1].copy()
     # Replace the ranks and suits in the top-left corners
     for i, card in enumerate(hand.get_cards_copy()):
@@ -214,6 +267,10 @@ def make_hand_graphic(hand: Hand, hide_hole: bool) -> str:
 
 
 def make_data_panel(data: list[list[str]]) -> Panel:
+    """
+    Given a list of lists, each of length 2, produces a panel containing the
+    data neatly formatted.
+    """
     data_formatted = "\n".join(
         [f"{item[0]}: {item[1]}" for item in data])
     data_panel = Panel(data_formatted, expand=False)
@@ -221,8 +278,17 @@ def make_data_panel(data: list[list[str]]) -> Panel:
 
 
 def make_dealer_panel(hand: Hand, hide_hole: bool) -> Panel:
+    """
+    Makes the dealer panel, and considers whether the hole card should be hidden
+    or not.
+    """
     hand_graphic = make_hand_graphic(hand, hide_hole)
-    score = hand.get_score() if hand.get_score() != 0 else "---"
+    # Get the score (which should be hidden if the hole is hidden)
+    if hand.get_score() == 0 or hide_hole:
+        score = "---"
+    else:
+        score = hand.get_score()
+    # Return the final panel.
     return Panel(
         renderable=Align.center(hand_graphic, vertical="middle"),
         title="[bold]Dealer[/bold]",
@@ -230,44 +296,67 @@ def make_dealer_panel(hand: Hand, hide_hole: bool) -> Panel:
     )
 
 
-def make_player_hand_panel(hand: Hand, player: Player, hand_type: str, n_in_row: int) -> Panel:
-    hand_graphic = make_hand_graphic(hand, False)
+def make_player_initial_bets_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
+    """
+    Makes a hand panel for a player while initial bets are being determined.
+    """
+    hand_graphic = make_hand_graphic(hand=hand, hide_hole=False)
+    score = "---"
+    bet = pound(hand.get_bet()) if hand.get_bet() is not None else "£---"
+    return Panel(
+        renderable=Align.center(hand_graphic, vertical="middle"),
+        title=f"[bold]{player.get_name()}[/bold]",
+        subtitle=f"score: {score}, bet: {bet}",
+        expand=True,
+        width=panel_width(n_in_row)
+    )
+
+
+def make_player_dealing_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
+    """
+    Makes a hand panel for a player while cards are being dealt.
+    """
+    hand_graphic = make_hand_graphic(hand=hand, hide_hole=False)
     score = hand.get_score() if hand.get_score() != 0 else "---"
-    if hand_type == "initial-bets":
-        bet = pound(hand.get_bet()) if hand.get_bet() is not None else "£---"
-        return Panel(
-            renderable=Align.center(hand_graphic, vertical="middle"),
-            title=f"[bold]{player.get_name()}[/bold]",
-            subtitle=f"score: {score}, bet: {bet}",
-            expand=True,
-            width=panel_width(n_in_row)
-        )
-    elif hand_type == "dealing":
-        return Panel(
-            renderable=Align.center(hand_graphic, vertical="middle"),
-            title=f"[bold]{player.get_name()}[/bold]",
-            subtitle=f"score: {score}, bet: {pound(hand.get_bet())}",
-            expand=True,
-            width=panel_width(n_in_row)
-        )
-    elif hand_type == "player-turn":
-        hand_status = hand.get_status()
-        if not (hand_status == "Active" and hand == player.get_next_hand()):
-            hand_status = None
-        box_type = box.HEAVY_EDGE if hand_status == "Active" else box.ROUNDED
-        return Panel(
-            renderable=Align.center(hand_graphic, vertical="middle"),
-            title=f"[bold]{hand_status}[/bold]",
-            subtitle=f"score: {score}, bet: {pound(hand.get_bet())}",
-            expand=True,
-            width=panel_width(n_in_row),
-            box=box_type,
-        )
+    return Panel(
+        renderable=Align.center(hand_graphic, vertical="middle"),
+        title=f"[bold]{player.get_name()}[/bold]",
+        subtitle=f"score: {score}, bet: {pound(hand.get_bet())}",
+        expand=True,
+        width=panel_width(n_in_row)
+    )
 
 
-def make_table_all(players: list[Player], dealer: Dealer, hand_type: str):
+def make_player_turn_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
+    """
+    Makes a hand panel for a player while it is their turn. A player can have multiple
+    hand panels for each hand.
+    """
+    hand_graphic = make_hand_graphic(hand=hand, hide_hole=False)
+    score = hand.get_score()
+    # Get hand status and format to be bold
+    hand_status = player.get_hand_status(hand)
+    if hand_status is not None:
+        hand_status = f"[bold]{hand_status}[/bold]"
+    # Determine the panel border weight based on whether hand is active
+    box_type = box.HEAVY_EDGE if hand_status == "Active" else box.ROUNDED
+    # Return final hand
+    return Panel(
+        renderable=Align.center(hand_graphic, vertical="middle"),
+        title=hand_status,
+        subtitle=f"score: {score}, bet: {pound(hand.get_bet())}",
+        width=panel_width(n_in_row),
+        box=box_type,
+    )
+
+
+def make_player_dealer_turn_panel(player: Player, n_in_row: int) -> Panel:
+    pass
+
+
+def make_table_all(players: list[Player], dealer: Dealer, hand_type: str, hide_hole=True):
     # Make dealer panel
-    dealer_panel = make_dealer_panel(dealer.get_next_hand(), True)
+    dealer_panel = make_dealer_panel(dealer.get_hands()[0], hide_hole)
     # Make player panels
     player_hand_panels = []
     for player in players:
@@ -299,7 +388,6 @@ def make_table_player(player: Player, dealer: Dealer):
     # Make player columns
     player_hand_columns = Columns(
         player_hand_panels,
-        expand=True,
         equal=True,
     )
     # Make contents list
@@ -313,7 +401,7 @@ def make_table_player(player: Player, dealer: Dealer):
 # ---------- DISPLAY FUNCTIONS ----------
 
 
-def _display_ask(content: list[ConsoleRenderable], invalid_message: str, validity_checker: Callable, is_valid: bool) -> str:
+def _display_ask(content: list[ConsoleRenderable], invalid_message: str, validity_checker: Callable, is_valid: bool, kwargs=None) -> str:
     # Clear the screen
     CONSOLE.clear()
     # Check whether error message should be added at end of content, and it isn't already there.
@@ -326,9 +414,9 @@ def _display_ask(content: list[ConsoleRenderable], invalid_message: str, validit
     # Take user input
     user_input = input("> ")
     # Validate user input using validation function
-    is_valid, invalid_message = validity_checker(user_input)
+    is_valid, invalid_message = validity_checker(user_input, kwargs=kwargs)
     if not is_valid:
-        return _display_ask(content, invalid_message, validity_checker, is_valid=False)
+        return _display_ask(content, invalid_message, validity_checker, is_valid=False, kwargs=kwargs)
     else:
         return user_input
 
@@ -451,7 +539,6 @@ def display_player_information(player_quantity: int) -> list[(str, int)]:
 
 
 def display_initial_bets(players: list[Player], dealer: Dealer):
-
     for player in players:
         # Get the initial bet
         initial_bet_content = make_table_all(
@@ -490,10 +577,33 @@ def display_card_dealing(players: list[Player], dealer: Dealer, can_proceed: boo
     return None
 
 
-def display_player_turn(player: Player, deck: Deck, players: list[Player], dealer: Dealer):
+def display_player_turn(player: Player, deck: Deck, players: list[Player], dealer: Dealer, await_enter: bool):
     # Make contents list
     content = make_table_player(player, dealer)
-    content.append(make_padding())
-    content.append(
-        "Once you are ready to proceed, please press [bold]ENTER[/bold].")
-    _display_ask(content, None, is_valid_enter, True)
+    if not await_enter:
+        content.append(make_padding())
+        content.append("Choose an action: " +
+                       ", ".join(player.get_action_choices()))
+        action = _display_ask(
+            content, None, is_valid_action, True, kwargs=player)
+        return action
+    else:
+        content.append(make_padding())
+        content.append(
+            "Once you are ready to proceed, please press [bold]ENTER[/bold].")
+        _display_ask(content, None, is_valid_enter, True)
+        return None
+
+
+def display_dealer_turn(players: list[Player], dealer: Dealer, can_proceed: bool = False) -> None:
+    # Make contents list
+    content = make_table_all(players, dealer, "dealer-turn", hide_hole=False)
+    # Display
+    if not can_proceed:
+        _display_timed(content, 1)
+    else:
+        content.append(make_padding())
+        content.append(
+            "Once you are ready to proceed, please press [bold]ENTER[/bold].")
+        _display_ask(content, None, is_valid_enter, True)
+    return None
