@@ -7,46 +7,36 @@ from settings import Settings
 class Blackjack():
 
     def __init__(self):
-        self.__deck = None
-        self.__players = []
-        self.__dealer = Dealer()
-
-    def title(self):
-        # Title screen
-        _ = interface.display_title()
+        self.deck = None
+        self.players = []
+        self.dealer = Dealer()
 
     def setup(self):
-        # Deck settings screen
-        number_of_decks = self.__interface.ask_number_of_decks()
-        self.__deck = Deck(number_of_decks=number_of_decks)
-        # Player quantity screen
-        number_of_players = self.__interface.ask_number_of_players()
-        # Player information
-        for i in range(1, number_of_players + 1):
-            name, purse = self.__interface.ask_player_name_and_purse(i)
-            player = Player(name, purse)
-            self.__players.append(player)
+        deck_quantity, player_quantity = interface.display_settings()
+        self.deck = Deck(number_of_decks=deck_quantity)
+        player_information = interface.display_player_information(
+            player_quantity)
+        for info in player_information:
+            self.players.append(Player(info[0], info[1]))
 
-    def deal_initial_hands(self, initial_bets: dict[str, int]) -> None:
+    def deal_initial_hands(self) -> None:
         """
         Simulates dealing cards to each player and the dealer.
         """
         # First, give each player and dealer an empty hand with bet
-        for player in self.__players:
-            empty_hand = Hand(bet=initial_bets[player.get_name()])
-            player.give_hand(empty_hand)
-        self.__dealer.give_hand(Hand())
+        for player in self.players:
+            player.give_hand(Hand())
+        self.dealer.give_hand(Hand())
+
+    def deal_cards(self):
         # Next, go through each player and give cards to hand
-        self.__interface.display_table_hands(
-            self.__players, self.__dealer)
+        interface.display_card_dealing(self.players, self.dealer)
         for _ in range(2):
-            for person in self.__players + [self.__dealer]:
+            for person in self.players + [self.dealer]:
                 hand = person.get_next_hand()
-                person.hit(hand, self.__deck)
-                self.__interface.display_table_hands(
-                    self.__players, self.__dealer)
-        self.__interface.display_table_hands(
-            self.__players, self.__dealer, can_proceed=True)
+                person.hit(hand, self.deck)
+                interface.display_card_dealing(self.players, self.dealer)
+        interface.display_card_dealing(self.players, self.dealer, True)
 
     def player_turn(self, player: Player, deck: Deck):
         """
@@ -79,32 +69,32 @@ class Blackjack():
 
     def play_round(self):
         # Shuffle deck
-        self.__deck.shuffle(1000)
+        self.deck.shuffle(1000)
+        # Deal initial hands
+        self.deal_initial_hands()
         # Take initial bets
-        # initial_bets = self.__interface.ask_player_initial_bets(self.__players)
-        initial_bets = {
-            "Joe": 500,
-            "Will": 500,
-            "Ines": 500,
-            "Maria": 500,
-            "Yohei": 500,
-        }
+        # _ = interface.display_initial_bets(self.players, self.dealer)
+        for player in self.players:
+            player.get_next_hand().set_bet(500)
         # Deal cards
-        self.deal_initial_hands(initial_bets)
+        self.deal_cards()
         # Iterate through player turns
-        for player in self.__players:
-            self.player_turn(player, self.__deck)
+        for player in self.players:
+            interface.display_player_turn(
+                player, self.deck, self.players, self.dealer)
 
     def play(self):
-        self.title()
+        # title
+        _ = interface.display_title()
         # self.setup()
-        self.__deck = Deck(number_of_decks=2)
-        self.__players.append(Player("Joe", 100000))
-        self.__players.append(Player("Will", 100000))
-        self.__players.append(Player("Ines", 100000))
-        self.__players.append(Player("Maria", 100000))
-        self.__players.append(Player("Yohei", 100000))
-        # self.play_round()
+        self.deck = Deck(number_of_decks=2)
+        self.players.append(Player("Joe", 10000))
+        self.players.append(Player("Will", 10000))
+        self.players.append(Player("Ines", 10000))
+        self.players.append(Player("Maria", 10000))
+        self.players.append(Player("Yohei", 10000))
+
+        self.play_round()
 
 
 if __name__ == "__main__":

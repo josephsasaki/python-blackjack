@@ -67,7 +67,7 @@ class Deck():
 
 class Hand():
 
-    def __init__(self, cards: list[Card] = None, bet: int = None):
+    def __init__(self, cards: list[Card] = None):
         # cards
         if cards is None:
             self.__cards = []
@@ -75,17 +75,19 @@ class Hand():
             if not all([isinstance(card, Card) for card in cards]):
                 raise ValueError("All passed cards must be Card objects.")
             self.__cards = cards
-        # bet
-        if bet is None:
-            self.__bet = None
-        else:
-            if not isinstance(bet, int):
-                raise ValueError("Bet must be an integer.")
-            if bet < Settings.MINIMUM_BET:
-                raise ValueError("Bet must be greater than minimum bet.")
-            self.__bet = bet
         # is_active
+        self.__bet = None
         self.__is_active = True
+
+    def get_status(self):
+        if self.is_blackjack():
+            return "Blackjack"
+        elif self.is_bust():
+            return "Bust"
+        elif not self.__is_active:
+            return "Stuck"
+        else:
+            return "Active"
 
     def get_cards_copy(self) -> list[Card]:
         return self.__cards.copy()
@@ -101,6 +103,13 @@ class Hand():
 
     def get_bet(self) -> int:
         return self.__bet
+
+    def set_bet(self, bet: int):
+        if not isinstance(bet, int):
+            raise ValueError("Bet must be an integer.")
+        if bet < Settings.MINIMUM_BET:
+            raise ValueError("Bet must be greater than minimum bet.")
+        self.__bet = bet
 
     def add_card(self, card: Card) -> None:
         if not isinstance(card, Card):
