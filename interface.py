@@ -351,11 +351,18 @@ class Interface():
         else:
             _ = input()
 
-    def display_player_turn(self, player: Player, dealer: Dealer, action_list: list[str]) -> str:
-        content_list = self.__content_player_hands(player, dealer)
-        ask_list = self.__content_ask_action(action_list)
+    def display_player_turn(self, player: Player, dealer: Dealer, action_list: list[str], error=False) -> str:
+        content_list1 = self.__content_player_hands(player, dealer)
+        action_string = ", ".join(action_list)
+        error_message = "INVALID" if error else " "
+        content_list2 = [action_string, error_message]
+        content_list = content_list1 + content_list2
         content = Group(*content_list)
         self.console.print(content)
+        action = input("    > ")
+        if action not in action_list:
+            return self.display_player_turn(player, dealer, action_list, error=True)
+        return action
 
     def __content_player_hands(self, player: Player, dealer: Dealer):
         self.console.clear()
@@ -371,6 +378,7 @@ class Interface():
         for hand in player.get_hands():
             score = hand.get_score()
             bet = self.pound(hand.get_bet())
+            box_type = box.HEAVY if hand == player.get_next_hand() else box.ROUNDED
             renderable = make_hand_graphic(hand)
             player_renderables.append(Panel(
                 renderable=Align.center(renderable, vertical="middle"),
@@ -378,12 +386,12 @@ class Interface():
                 subtitle=f"score: {score}, bet: £{bet}",
                 expand=True,
                 width=45,
-                box=box.HEAVY
+                box=box_type,
             ))
         # Make layout
         columns = Columns(
             player_renderables,
-            expand=True,
+            # expand=True,
             equal=True,
         )
         content_list = [
@@ -392,9 +400,6 @@ class Interface():
             columns,
         ]
         return content_list
-
-    def __content_ask_action(self, action_list):
-        pass
 
 
 def make_hand_graphic(hand: Hand) -> list[str]:

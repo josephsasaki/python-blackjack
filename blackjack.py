@@ -107,12 +107,11 @@ class Blackjack():
             # Get player action and commit action
             action = self.__interface.display_player_turn(
                 player, self.__dealer, action_choices)
-            _ = input()
             # Actions
             if action == "hit":
                 player.hit(hand, deck)
             elif action == "stick":
-                player.stick(hand, deck)
+                player.stick(hand)
             elif action == "split":
                 player.split(hand, deck)
             elif action == "double-down":
