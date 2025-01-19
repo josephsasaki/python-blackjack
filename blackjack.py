@@ -51,7 +51,7 @@ class Blackjack():
                 continue
             # Get player action and commit action
             action = interface.display_player_turn(
-                player, self.deck, self.players, self.dealer, False)
+                player, self.deck, self.dealer, False)
             # Actions
             if action == "hit":
                 player.hit(hand, self.deck)
@@ -62,7 +62,7 @@ class Blackjack():
             elif action == "double-down":
                 player.double_down(hand, self.deck)
         _ = interface.display_player_turn(
-            player, self.deck, self.players, self.dealer, True)
+            player, self.deck, self.dealer, True)
 
     def dealer_should_play(self) -> bool:
         """

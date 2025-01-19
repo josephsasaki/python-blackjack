@@ -5,6 +5,7 @@ from settings import Settings
 from collections.abc import Callable
 
 from rich import box
+from rich.table import Table
 from rich.console import ConsoleRenderable
 from rich.console import Console, Group
 from rich.panel import Panel
@@ -137,7 +138,7 @@ def is_valid_name(user_input: str, player: Player) -> bool:
     """
     Validation function for a player name. Must not be an empty string.
     """
-    if user_input is None:
+    if user_input == "":
         return False, "[bold red]Invalid name. Please try again.[/bold red]"
     return True, None
 
@@ -195,7 +196,7 @@ def panel_width(n_in_row: int) -> int:
     """
     Returns a panel width to ensure all n_in_rows panel fit across screen.
     """
-    if n_in_row not in {0, 1, 2, 3, 4}:
+    if n_in_row not in {1, 2, 3, 4, 5}:
         raise ValueError("Invalid number of panels across screen.")
     widths = [180, 89, 59, 44, 35]
     return widths[n_in_row-1]
@@ -213,57 +214,6 @@ def make_padding() -> ConsoleRenderable:
     Returns a 1 line padding object to place between renderables.
     """
     return Padding("", (1, 0, 0, 0))
-
-
-def row_replace(graphic: list[str], row_index: int, column_index: int, replace: str) -> None:
-    """
-    Takes a card graphic and replaces a rank or suit in a particular position. Function
-    works in place, so does not return anything.
-    """
-    graphic[row_index] = graphic[row_index][:column_index] + \
-        replace + graphic[row_index][column_index+len(replace):]
-
-
-def make_hand_graphic(hand: Hand, hide_hole: bool) -> str:
-    """
-    Produces a graphic for a hand. Takes a global graphic object and places the correct
-    card symbols to produce the graphic.
-    """
-    number_of_cards = hand.number_of_cards()
-    # First, check whether the hand is empty
-    if number_of_cards == 0:
-        return "\n".join([" "*21 for _ in range(10)])
-    # Get the relevant blank hand graphic
-    hand_graphic = HAND_GRAPHICS[number_of_cards-1].copy()
-    # Replace the ranks and suits in the top-left corners
-    for i, card in enumerate(hand.get_cards_copy()):
-        if i == 0 and hide_hole:
-            rank_replacement = "? "
-            suit_replacement = "?"
-        else:
-            rank_replacement = card.get_rank() + " " if card.get_rank() != "10" else "10"
-            suit_replacement = card.get_suit()
-        # First, replace the rank
-        row_index, column_index = TOP_RANK_REPLACE[i]
-        row_replace(hand_graphic, row_index, column_index, rank_replacement)
-        # Next, replace the suit
-        row_index, column_index = TOP_SUIT_REPLACE[i]
-        row_replace(hand_graphic, row_index, column_index, suit_replacement)
-    # Replace the rank and suit on the bottom-right of the top card
-    top_card = hand.get_card_by_index(-1)
-    if hand.number_of_cards() == 1 and hide_hole:
-        rank_replacement = " ?"
-        suit_replacement = "?"
-    else:
-        rank_replacement = " " + top_card.get_rank() if top_card.get_rank() != "10" else "10"
-        suit_replacement = top_card.get_suit()
-    # Replace the rank
-    row_index, column_index = BOTTOM_RANK_REPLACE[number_of_cards-1]
-    row_replace(hand_graphic, row_index, column_index, rank_replacement)
-    # Replace the suit
-    row_index, column_index = BOTTOM_SUIT_REPLACE[number_of_cards-1]
-    row_replace(hand_graphic, row_index, column_index, suit_replacement)
-    return "\n".join(hand_graphic)
 
 
 def make_data_panel(data: list[list[str]]) -> Panel:
@@ -296,38 +246,103 @@ def make_dealer_panel(hand: Hand, hide_hole: bool) -> Panel:
     )
 
 
-def make_player_initial_bets_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
+def row_replace(graphic: list[str], row_index: int, column_index: int, replace: str) -> None:
     """
-    Makes a hand panel for a player while initial bets are being determined.
+    Takes a card graphic and replaces a rank or suit in a particular position. Function
+    works in place, so does not return anything.
     """
-    hand_graphic = make_hand_graphic(hand=hand, hide_hole=False)
-    score = "---"
-    bet = pound(hand.get_bet()) if hand.get_bet() is not None else "£---"
-    return Panel(
-        renderable=Align.center(hand_graphic, vertical="middle"),
-        title=f"[bold]{player.get_name()}[/bold]",
-        subtitle=f"score: {score}, bet: {bet}",
-        expand=True,
-        width=panel_width(n_in_row)
-    )
+    graphic[row_index] = graphic[row_index][:column_index] + \
+        replace + graphic[row_index][column_index+len(replace):]
 
 
-def make_player_dealing_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
+def make_hand_graphic(hand: Hand, hide_hole: bool) -> str:
     """
-    Makes a hand panel for a player while cards are being dealt.
+    Produces a graphic for a hand. Takes a global graphic object and places the correct
+    card symbols to produce the graphic.
     """
-    hand_graphic = make_hand_graphic(hand=hand, hide_hole=False)
-    score = hand.get_score() if hand.get_score() != 0 else "---"
-    return Panel(
-        renderable=Align.center(hand_graphic, vertical="middle"),
-        title=f"[bold]{player.get_name()}[/bold]",
-        subtitle=f"score: {score}, bet: {pound(hand.get_bet())}",
-        expand=True,
-        width=panel_width(n_in_row)
-    )
+    number_of_cards = hand.number_of_cards()
+    # First, check whether the hand is empty
+    if number_of_cards == 0:
+        return "\n".join([" "*21 for _ in range(10)])
+    # Get the relevant blank hand graphic
+    hand_graphic = HAND_GRAPHICS[number_of_cards-1].copy()
+    # Replace the ranks and suits in the top-left corners
+    for i, card in enumerate(hand.get_cards()):
+        if i == 0 and hide_hole:
+            rank_replacement = "? "
+            suit_replacement = "?"
+        else:
+            rank_replacement = card.get_rank() + " " if card.get_rank() != "10" else "10"
+            suit_replacement = card.get_suit()
+        # First, replace the rank
+        row_index, column_index = TOP_RANK_REPLACE[i]
+        row_replace(hand_graphic, row_index, column_index, rank_replacement)
+        # Next, replace the suit
+        row_index, column_index = TOP_SUIT_REPLACE[i]
+        row_replace(hand_graphic, row_index, column_index, suit_replacement)
+    # Replace the rank and suit on the bottom-right of the top card
+    top_card = hand.get_card_by_index(-1)
+    if hand.number_of_cards() == 1 and hide_hole:
+        rank_replacement = " ?"
+        suit_replacement = "?"
+    else:
+        rank_replacement = " " + top_card.get_rank() if top_card.get_rank() != "10" else "10"
+        suit_replacement = top_card.get_suit()
+    # Replace the rank
+    row_index, column_index = BOTTOM_RANK_REPLACE[number_of_cards-1]
+    row_replace(hand_graphic, row_index, column_index, rank_replacement)
+    # Replace the suit
+    row_index, column_index = BOTTOM_SUIT_REPLACE[number_of_cards-1]
+    row_replace(hand_graphic, row_index, column_index, suit_replacement)
+    return "\n".join(hand_graphic)
 
 
-def make_player_turn_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
+def make_hand_list(player: Player) -> str:
+    """
+    If a player has multiple hands, a list of hands and bets are used instead. Note,
+    the hide_hole parameter is not needed since the dealer will never have more than one
+    hand.
+    """
+    table = Table(box=None, show_header=False)
+    table.add_column("Hand", justify="left", no_wrap=True)
+    table.add_column("Bet", justify="right", no_wrap=True)
+    for hand in player.get_hands():
+        table.add_row(hand.get_string(), pound(hand.get_bet()))
+    return table
+
+
+def make_player_table_panel(player: Player, n_in_row: int) -> Panel:
+    """
+    Makes a hand panel for a player which contains all their hands. This panel
+    is used for when initial bets are being taken, cards are being dealt, the dealer's
+    turn. If the player only has one hand, the card graphic can be used. If the player
+    has multiple hands, they are listed in string form.
+    """
+    if len(player.get_hands()) == 1:
+        hand = player.get_hands()[0]
+        score = hand.get_score() if hand.get_score() != 0 else "---"
+        bet = pound(hand.get_bet()) if hand.get_bet() is not None else "£---"
+        # Get the hand graphic
+        hand_renderable = make_hand_graphic(hand=hand, hide_hole=False)
+        return Panel(
+            renderable=Align.center(hand_renderable, vertical="middle"),
+            title=f"[bold]{player.get_name()}[/bold]",
+            subtitle=f"score: {score}, bet: {bet}",
+            expand=True,
+            width=panel_width(n_in_row)
+        )
+    else:
+        hand_renderable = make_hand_list(player=player)
+        return Panel(
+            renderable=Align.center(hand_renderable, vertical="middle"),
+            title=f"[bold]{player.get_name()}[/bold]",
+            expand=True,
+            width=panel_width(n_in_row),
+            height=12,
+        )
+
+
+def make_player_turn_panel(hand: Hand, player: Player) -> Panel:
     """
     Makes a hand panel for a player while it is their turn. A player can have multiple
     hand panels for each hand.
@@ -345,24 +360,24 @@ def make_player_turn_panel(hand: Hand, player: Player, n_in_row: int) -> Panel:
         renderable=Align.center(hand_graphic, vertical="middle"),
         title=hand_status,
         subtitle=f"score: {score}, bet: {pound(hand.get_bet())}",
-        width=panel_width(n_in_row),
+        width=panel_width(4),
         box=box_type,
     )
 
 
-def make_player_dealer_turn_panel(player: Player, n_in_row: int) -> Panel:
-    pass
-
-
-def make_table_all(players: list[Player], dealer: Dealer, hand_type: str, hide_hole=True):
-    # Make dealer panel
-    dealer_panel = make_dealer_panel(dealer.get_hands()[0], hide_hole)
-    # Make player panels
+def make_all_players_table_content(players: list[Player], dealer: Dealer, game_stage: str, hide_hole: bool):
+    """
+    The following function produces all the content seen during a round. This will
+    change depending on what stage of the game we are at.
+    """
+    # First, handle the dealer panel.
+    dealer_panel = make_dealer_panel(
+        dealer.get_hands()[0], hide_hole=hide_hole)
+    # Next, handle the player's hands panel
     player_hand_panels = []
     for player in players:
-        hand = player.get_next_hand()
         player_hand_panels.append(
-            make_player_hand_panel(hand, player, hand_type, len(players)))
+            make_player_table_panel(player, len(players)))
     # Make player columns
     player_hand_columns = Columns(
         player_hand_panels,
@@ -377,17 +392,23 @@ def make_table_all(players: list[Player], dealer: Dealer, hand_type: str, hide_h
     return content
 
 
-def make_table_player(player: Player, dealer: Dealer):
-    # Make dealer panel
-    dealer_panel = make_dealer_panel(dealer.get_next_hand(), True)
-    # Make panels for each of player's hands
+def make_single_players_table_content(player: Player, dealer: Dealer, game_stage: str, hide_hole: bool):
+    """
+    The following function produces all the content seen during a round. This will
+    change depending on what stage of the game we are at.
+    """
+    # First, handle the dealer panel.
+    dealer_panel = make_dealer_panel(
+        dealer.get_hands()[0], hide_hole=hide_hole)
+    # Next, handle the player's hands panel
     player_hand_panels = []
     for hand in player.get_hands():
         player_hand_panels.append(
-            make_player_hand_panel(hand, player, "player-turn", 4))
+            make_player_turn_panel(hand, player))
     # Make player columns
     player_hand_columns = Columns(
         player_hand_panels,
+        expand=True,
         equal=True,
     )
     # Make contents list
@@ -401,7 +422,7 @@ def make_table_player(player: Player, dealer: Dealer):
 # ---------- DISPLAY FUNCTIONS ----------
 
 
-def _display_ask(content: list[ConsoleRenderable], invalid_message: str, validity_checker: Callable, is_valid: bool, kwargs=None) -> str:
+def _display_ask(content: list[ConsoleRenderable], invalid_message: str, validity_checker: Callable, is_valid: bool, player: Player) -> str:
     # Clear the screen
     CONSOLE.clear()
     # Check whether error message should be added at end of content, and it isn't already there.
@@ -414,9 +435,9 @@ def _display_ask(content: list[ConsoleRenderable], invalid_message: str, validit
     # Take user input
     user_input = input("> ")
     # Validate user input using validation function
-    is_valid, invalid_message = validity_checker(user_input, kwargs=kwargs)
+    is_valid, invalid_message = validity_checker(user_input, player=player)
     if not is_valid:
-        return _display_ask(content, invalid_message, validity_checker, is_valid=False, kwargs=kwargs)
+        return _display_ask(content, invalid_message, validity_checker, is_valid=False, player=player)
     else:
         return user_input
 
@@ -444,7 +465,7 @@ def display_title() -> str:
         make_padding(),
         "Once you are ready to proceed, please press [bold]ENTER[/bold].",
     ]
-    _ = _display_ask(title_content, None, is_valid_enter, True)
+    _ = _display_ask(title_content, None, is_valid_enter, True, player=None)
     return None
 
 
@@ -463,7 +484,7 @@ def display_settings() -> str:
         f"How many decks will you play with? (1 to {Settings.MAX_DECK_PACKS})",
     ]
     deck_quantity = _display_ask(deck_quantity_content,
-                                 None, is_valid_deck_quantity, True)
+                                 None, is_valid_deck_quantity, True, player=None)
     # Update the data to include the number of decks
     data[0][1] = deck_quantity
     # Complete the player quantity display
@@ -475,7 +496,7 @@ def display_settings() -> str:
         f"How many players are at the table? (1 to {Settings.MAX_PLAYERS})",
     ]
     player_quantity = _display_ask(player_quantity_content,
-                                   None, is_valid_player_quantity, True)
+                                   None, is_valid_player_quantity, True, player=None)
     # Update the data to include the number of players
     data[1][1] = player_quantity
     # Finally, display inputs and await user input
@@ -487,7 +508,7 @@ def display_settings() -> str:
         f"Once you are ready to proceed, please press [bold]ENTER[/bold].",
     ]
     _ = _display_ask(final_content,
-                     None, is_valid_enter, True)
+                     None, is_valid_enter, True, player=None)
     return int(deck_quantity), int(player_quantity)
 
 
@@ -505,7 +526,7 @@ def display_player_information(player_quantity: int) -> list[(str, int)]:
             f"What is the name of Player {i}?",
         ]
         player_name = _display_ask(player_name_content,
-                                   None, is_valid_name, True)
+                                   None, is_valid_name, True, player=None)
         # Update the data lists
         display_data.append([player_name, "£---"])
         return_data.append([player_name, None])
@@ -519,7 +540,7 @@ def display_player_information(player_quantity: int) -> list[(str, int)]:
                 pound(Settings.MINIMUM_BET)})",
         ]
         player_purse = _display_ask(player_purse_content,
-                                    None, is_valid_purse_amount, True)
+                                    None, is_valid_purse_amount, True, player=None)
         # Update the data list
         player_purse = int(player_purse)*100
         display_data[-1][1] = pound(player_purse)
@@ -534,38 +555,40 @@ def display_player_information(player_quantity: int) -> list[(str, int)]:
         f"Once you are ready to proceed, please press [bold]ENTER[/bold].",
     ]
     _ = _display_ask(final_content,
-                     None, is_valid_enter, True)
+                     None, is_valid_enter, True, player=None)
     return return_data
 
 
 def display_initial_bets(players: list[Player], dealer: Dealer):
     for player in players:
         # Get the initial bet
-        initial_bet_content = make_table_all(
-            players, dealer, "initial-bets")
+        initial_bet_content = make_all_players_table_content(
+            players, dealer, "pre-turn", hide_hole=True)
         initial_bet_content.append(make_padding())
         initial_bet_content.append(f"{player.get_name(
-        )}, how much is your initial bet? (Minimum bet is {pound(Settings.MINIMUM_BET)}")
+        )}, how much is your initial bet? (Minimum bet is {pound(Settings.MINIMUM_BET)})")
         initial_bet = _display_ask(initial_bet_content,
-                                   None, is_valid_bet, True)
+                                   None, is_valid_bet, True, player=player)
         # Update the bet
         hand = player.get_next_hand()
         initial_bet = int(initial_bet)*100
         hand.set_bet(initial_bet)
 
     # Await enter press
-    initial_bet_content = make_table_all(
-        players, dealer, "initial-bets")
+    initial_bet_content = make_all_players_table_content(
+        players, dealer, "pre-turn", hide_hole=True)
     initial_bet_content.append(make_padding())
     initial_bet_content.append(
         "Once you are ready to proceed, please press [bold]ENTER[/bold].")
-    _ = _display_ask(initial_bet_content, None, is_valid_enter, True)
+    _ = _display_ask(initial_bet_content, None,
+                     is_valid_enter, True, player=None)
     return None
 
 
 def display_card_dealing(players: list[Player], dealer: Dealer, can_proceed: bool = False) -> None:
     # Make contents list
-    content = make_table_all(players, dealer, "dealing")
+    content = make_all_players_table_content(
+        players, dealer, "pre-turn", hide_hole=True)
     # Display
     if not can_proceed:
         _display_timed(content, 0)
@@ -573,31 +596,33 @@ def display_card_dealing(players: list[Player], dealer: Dealer, can_proceed: boo
         content.append(make_padding())
         content.append(
             "Once you are ready to proceed, please press [bold]ENTER[/bold].")
-        _display_ask(content, None, is_valid_enter, True)
+        _display_ask(content, None, is_valid_enter, True, player=None)
     return None
 
 
-def display_player_turn(player: Player, deck: Deck, players: list[Player], dealer: Dealer, await_enter: bool):
+def display_player_turn(player: Player, deck: Deck, dealer: Dealer, await_enter: bool):
     # Make contents list
-    content = make_table_player(player, dealer)
+    content = make_single_players_table_content(
+        player, dealer, "player-turn", hide_hole=True)
     if not await_enter:
         content.append(make_padding())
         content.append("Choose an action: " +
                        ", ".join(player.get_action_choices()))
         action = _display_ask(
-            content, None, is_valid_action, True, kwargs=player)
+            content, None, is_valid_action, True, player=player)
         return action
     else:
         content.append(make_padding())
         content.append(
             "Once you are ready to proceed, please press [bold]ENTER[/bold].")
-        _display_ask(content, None, is_valid_enter, True)
+        _display_ask(content, None, is_valid_enter, True, player=None)
         return None
 
 
 def display_dealer_turn(players: list[Player], dealer: Dealer, can_proceed: bool = False) -> None:
     # Make contents list
-    content = make_table_all(players, dealer, "dealer-turn", hide_hole=False)
+    content = make_all_players_table_content(
+        players, dealer, "dealer-turn", hide_hole=False)
     # Display
     if not can_proceed:
         _display_timed(content, 1)
@@ -605,5 +630,5 @@ def display_dealer_turn(players: list[Player], dealer: Dealer, can_proceed: bool
         content.append(make_padding())
         content.append(
             "Once you are ready to proceed, please press [bold]ENTER[/bold].")
-        _display_ask(content, None, is_valid_enter, True)
+        _display_ask(content, None, is_valid_enter, True, player=None)
     return None

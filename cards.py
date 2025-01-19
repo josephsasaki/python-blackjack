@@ -22,7 +22,7 @@ class Card():
     def get_suit(self) -> str:
         return self.__suit
 
-    def __repr__(self) -> str:
+    def get_string(self) -> str:
         return self.__rank + self.__suit
 
 
@@ -79,8 +79,8 @@ class Hand():
         self.__bet = None
         self.__is_active = True
 
-    def get_cards_copy(self) -> list[Card]:
-        return self.__cards.copy()
+    def get_cards(self) -> list[Card]:
+        return self.__cards
 
     def number_of_cards(self) -> int:
         return len(self.__cards)
@@ -160,3 +160,6 @@ class Hand():
 
     def get_card_by_index(self, index: int) -> Card:
         return self.__cards[index]
+
+    def get_string(self) -> str:
+        return ", ".join([card.get_string() for card in self.__cards])
